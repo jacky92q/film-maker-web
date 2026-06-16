@@ -67,6 +67,7 @@ export default function EditorCanvas({ orientation }: { orientation: VideoOrient
 
     function rectNorm(e: PointerEvent) {
       const r = wrap!.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2) return { x: 0.5, y: 0.5 };
       // canvas is letterboxed inside wrap via object-contain
       const scale = Math.min(r.width / dims.w, r.height / dims.h);
       const dispW = dims.w * scale;
@@ -105,7 +106,8 @@ export default function EditorCanvas({ orientation }: { orientation: VideoOrient
     }
 
     function onDown(e: PointerEvent) {
-      wrap!.setPointerCapture(e.pointerId);
+      e.preventDefault();
+      try { wrap!.setPointerCapture(e.pointerId); } catch { /* ignore */ }
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       const n = rectNorm(e);
       moved = false;

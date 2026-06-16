@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { Clapperboard, Mail, Lock, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../store/auth';
 import { useT } from '../i18n';
-import { Button } from '../components/ui';
 import { Field } from './Login';
 
 export default function Register() {
@@ -26,30 +25,19 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-bg">
-      <div className="relative overflow-hidden rounded-b-[32px] bg-gradient-to-br from-[#3B1F0A] via-[#7B3F18] to-primary px-6 pb-12 pt-14 text-white">
-        <button onClick={() => nav(-1)} className="mb-6 flex items-center gap-1 text-white/80">
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white/15 backdrop-blur">
-          <Clapperboard className="h-7 w-7" />
+    <div className="flex min-h-screen items-center justify-center bg-bg px-6 py-12">
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
+        <Link to="/login" className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-text-mid hover:text-text-dark">
+          <ArrowLeft className="h-4 w-4" /> {t('signIn')}
+        </Link>
+        <div className="mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-primary to-primary-dark">
+          <Clapperboard className="h-6 w-6 text-white" />
         </div>
-        <h1 className="mt-5 font-serif text-[26px] font-bold">{t('createAccountTitle')}</h1>
-        <p className="mt-2 text-sm text-white/75">{t('registerSubtitle')}</p>
-      </div>
+        <h2 className="font-serif text-3xl font-bold text-text-dark">{t('createAccountTitle')}</h2>
+        <p className="mt-1.5 text-sm text-text-mid">{t('registerSubtitle')}</p>
 
-      <div className="mx-auto -mt-6 w-full max-w-[440px] px-5">
-        <motion.form
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          onSubmit={submit}
-          className="rounded-2xl bg-surface p-6 shadow-card"
-        >
-          {error && (
-            <div className="mb-4 rounded-xl border border-danger/30 bg-danger/[0.08] px-3 py-2.5 text-[13px] text-danger">
-              {error}
-            </div>
-          )}
+        <form onSubmit={submit} className="mt-7">
+          {error && <div className="mb-4 rounded-xl border border-danger/30 bg-danger/[0.08] px-3 py-2.5 text-[13px] text-danger">{error}</div>}
           <Field icon={<Mail className="h-[18px] w-[18px]" />} label={t('email')}>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-transparent outline-none" />
           </Field>
@@ -61,19 +49,15 @@ export default function Register() {
           <Field icon={<Lock className="h-[18px] w-[18px]" />} label={t('confirmPassword')}>
             <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className="w-full bg-transparent outline-none" />
           </Field>
-
-          <Button type="submit" className="mt-5 h-[54px] w-full">
+          <button type="submit" className="mt-5 w-full rounded-xl bg-primary py-3 text-sm font-bold text-white shadow-sm transition hover:brightness-105 active:scale-[0.99]">
             {t('createAccountButton')}
-          </Button>
+          </button>
+        </form>
 
-          <p className="mt-5 text-center text-sm text-text-mid">
-            {t('alreadyHaveAccount')}{' '}
-            <Link to="/login" className="font-bold text-primary">
-              {t('signIn')}
-            </Link>
-          </p>
-        </motion.form>
-      </div>
+        <p className="mt-6 text-center text-sm text-text-mid">
+          {t('alreadyHaveAccount')} <Link to="/login" className="font-bold text-primary">{t('signIn')}</Link>
+        </p>
+      </motion.div>
     </div>
   );
 }
