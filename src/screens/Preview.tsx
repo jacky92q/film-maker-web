@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Play, Pause, SkipBack, SkipForward } from 'lucide-react';
+import { ArrowLeft, Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react';
 import { useProjects } from '../store/projects';
+import { useT } from '../i18n';
 import { FilmPlayer } from '../render/FilmPlayer';
 
 function fmtTime(s: number): string {
@@ -14,6 +14,7 @@ function fmtTime(s: number): string {
 export default function Preview() {
   const { id } = useParams();
   const nav = useNavigate();
+  const { t } = useT();
   const project = useProjects((s) => s.getById(id!));
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const playerRef = useRef<FilmPlayer | null>(null);
@@ -22,37 +23,18 @@ export default function Preview() {
   const [elapsed, setElapsed] = useState(0);
   const [total, setTotal] = useState(0);
   const [slideIdx, setSlideIdx] = useState(0);
-  const [showControls, setShowControls] = useState(true);
-  const hideTimer = useRef<number>();
-
-  const poke = useCallback(() => {
-    setShowControls(true);
-    window.clearTimeout(hideTimer.current);
-    hideTimer.current = window.setTimeout(() => setShowControls(false), 3000);
-  }, []);
 
   useEffect(() => {
     if (!project || !canvasRef.current) return;
     const player = new FilmPlayer(canvasRef.current, project, {
-      onTick: (e, tot, idx) => {
-        setElapsed(e);
-        setTotal(tot);
-        setSlideIdx(idx);
-      },
+      onTick: (e, tot, idx) => { setElapsed(e); setTotal(tot); setSlideIdx(idx); },
       onEnded: () => setPlaying(false),
     });
     playerRef.current = player;
     setTotal(player.total);
-    const start = setTimeout(() => {
-      player.play();
-      setPlaying(true);
-      poke();
-    }, 350);
-    return () => {
-      clearTimeout(start);
-      player.dispose();
-    };
-  }, [project, poke]);
+    const start = setTimeout(() => { player.play(); setPlaying(true); }, 300);
+    return () => { clearTimeout(start); player.dispose(); };
+  }, [project]);
 
   if (!project) return null;
   const slideCount = project.slides.length;
@@ -62,104 +44,70 @@ export default function Preview() {
     if (!p) return;
     p.toggle();
     setPlaying(p.playing);
-    poke();
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black" onMouseMove={poke} onClick={poke}>
-      <div className="relative flex h-full w-full items-center justify-center">
-        <canvas
-          ref={canvasRef}
-          className="max-h-full max-w-full"
-          style={{ aspectRatio: project.orientation === 'portrait' ? '9/16' : '16/9' }}
-        />
+    <div className="flex h-[100dvh] flex-col bg-[#0a0a0a] text-cream">
+      {/* Header */}
+      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-white/10 px-4">
+        <button onClick={() => nav(`/editor/${id}`)} className="grid h-9 w-9 place-items-center rounded-lg text-cream hover:bg-white/10">
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <span className="truncate font-serif text-base font-semibold tracking-wide text-gold">{project.title}</span>
+        <button onClick={() => nav(`/export/${id}`)} className="ml-auto flex items-center gap-1.5 rounded-lg bg-gold px-3.5 py-2 text-sm font-bold text-black hover:brightness-105">
+          <Download className="h-4 w-4" /> {t('export')}
+        </button>
+      </header>
+
+      {/* Stage */}
+      <div className="flex min-h-0 flex-1 items-center justify-center p-4 sm:p-8">
+        <div className="relative w-full max-w-5xl">
+          <canvas
+            ref={canvasRef}
+            onClick={toggle}
+            className="mx-auto max-h-[68vh] w-auto cursor-pointer rounded-xl shadow-2xl"
+            style={{ aspectRatio: project.orientation === 'portrait' ? '9/16' : '16/9', maxWidth: '100%' }}
+          />
+        </div>
       </div>
 
-      <AnimatePresence>
-        {showControls && (
-          <>
-            {/* top bar */}
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between bg-gradient-to-b from-black/75 to-transparent px-4 pb-8 pt-[calc(env(safe-area-inset-top)+10px)]"
-            >
+      {/* Controls */}
+      <div className="shrink-0 border-t border-white/10 bg-dark-surface px-4 py-4 sm:px-8">
+        <div className="mx-auto max-w-3xl">
+          {/* slide dots */}
+          <div className="mb-3 flex items-center justify-center gap-1.5">
+            {project.slides.map((s, i) => (
               <button
-                onClick={(e) => { e.stopPropagation(); nav(-1); }}
-                className="pointer-events-auto grid h-10 w-10 place-items-center rounded-full text-white"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-              <span className="truncate px-4 font-serif text-[15px] font-semibold tracking-wide text-gold">{project.title}</span>
-              <span className="w-10" />
-            </motion.div>
-
-            {/* center controls */}
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="absolute inset-0 flex items-center justify-center gap-8"
-            >
-              <CtrlBtn onClick={(e) => { e.stopPropagation(); playerRef.current?.prevSlide(); poke(); }} disabled={slideIdx === 0}>
-                <SkipBack className="h-6 w-6" />
-              </CtrlBtn>
-              <button
-                onClick={(e) => { e.stopPropagation(); toggle(); }}
-                className="grid h-[72px] w-[72px] place-items-center rounded-full border border-gold/60 bg-black/45 text-gold shadow-[0_0_24px_rgba(201,168,76,0.4)] active:scale-95"
-              >
-                {playing ? <Pause className="h-9 w-9" /> : <Play className="ml-1 h-9 w-9" />}
-              </button>
-              <CtrlBtn onClick={(e) => { e.stopPropagation(); playerRef.current?.nextSlide(); poke(); }} disabled={slideIdx >= slideCount - 1}>
-                <SkipForward className="h-6 w-6" />
-              </CtrlBtn>
-            </motion.div>
-
-            {/* bottom bar */}
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent px-4 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-10"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="mb-3 flex items-center justify-center gap-1.5">
-                {project.slides.map((s, i) => (
-                  <button
-                    key={s.id}
-                    onClick={() => { playerRef.current?.seekSlide(i); poke(); }}
-                    className="h-1 rounded-full transition-all"
-                    style={{ width: i === slideIdx ? 24 : 6, background: i === slideIdx ? '#C9A84C' : 'rgba(255,255,255,0.35)' }}
-                  />
-                ))}
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="w-10 text-right text-[11px] text-white/65">{fmtTime(elapsed)}</span>
-                <input
-                  type="range"
-                  min={0}
-                  max={total}
-                  step={0.01}
-                  value={elapsed}
-                  onChange={(e) => { playerRef.current?.seek(Number(e.target.value)); setElapsed(Number(e.target.value)); poke(); }}
-                  className="range-dark flex-1"
-                />
-                <span className="w-10 text-[11px] text-white/65">{fmtTime(total)}</span>
-              </div>
-              <div className="mt-1 text-center text-[11px] tracking-wide text-white/40">
-                {slideIdx + 1} / {slideCount}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+                key={s.id}
+                onClick={() => playerRef.current?.seekSlide(i)}
+                className="h-1.5 rounded-full transition-all"
+                style={{ width: i === slideIdx ? 28 : 8, background: i === slideIdx ? '#C9A84C' : 'rgba(255,255,255,0.25)' }}
+              />
+            ))}
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="w-10 text-right text-xs text-white/60">{fmtTime(elapsed)}</span>
+            <input
+              type="range" min={0} max={total || 1} step={0.01} value={elapsed}
+              onChange={(e) => { playerRef.current?.seek(Number(e.target.value)); setElapsed(Number(e.target.value)); }}
+              className="range-dark flex-1"
+            />
+            <span className="w-10 text-xs text-white/60">{fmtTime(total)}</span>
+          </div>
+          <div className="mt-3 flex items-center justify-center gap-4">
+            <button onClick={() => playerRef.current?.prevSlide()} disabled={slideIdx === 0} className="grid h-10 w-10 place-items-center rounded-full text-white/80 hover:bg-white/10 disabled:opacity-30">
+              <SkipBack className="h-5 w-5" />
+            </button>
+            <button onClick={toggle} className="grid h-14 w-14 place-items-center rounded-full bg-gold text-black shadow-lg transition hover:brightness-105 active:scale-95">
+              {playing ? <Pause className="h-7 w-7" /> : <Play className="ml-0.5 h-7 w-7" />}
+            </button>
+            <button onClick={() => playerRef.current?.nextSlide()} disabled={slideIdx >= slideCount - 1} className="grid h-10 w-10 place-items-center rounded-full text-white/80 hover:bg-white/10 disabled:opacity-30">
+              <SkipForward className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="mt-2 text-center text-xs text-white/40">{slideIdx + 1} / {slideCount}</div>
+        </div>
+      </div>
     </div>
-  );
-}
-
-function CtrlBtn({ children, onClick, disabled }: { children: React.ReactNode; onClick: (e: React.MouseEvent) => void; disabled?: boolean }) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className="grid h-11 w-11 place-items-center rounded-full border border-white/30 text-white/90 disabled:border-white/10 disabled:text-white/25"
-    >
-      {children}
-    </button>
   );
 }

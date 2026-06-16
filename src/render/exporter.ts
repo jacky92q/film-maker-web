@@ -4,6 +4,7 @@ import { easeInOutCubic } from './anim';
 import { drawSlide } from './drawSlide';
 import { compositeTransition, TRANSITION_MS } from './transitions';
 import { loadImage } from '../lib/imageStore';
+import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 
 export interface ExportOptions {
   width: number;
@@ -20,53 +21,36 @@ export interface ExportResult {
   mime: string;
 }
 
-function pickMime(): { mime: string; ext: string } {
-  const candidates = [
-    { mime: 'video/mp4;codecs=avc1.42E01E', ext: 'mp4' },
-    { mime: 'video/mp4', ext: 'mp4' },
-    { mime: 'video/webm;codecs=vp9', ext: 'webm' },
-    { mime: 'video/webm;codecs=vp8', ext: 'webm' },
-    { mime: 'video/webm', ext: 'webm' },
-  ];
-  for (const c of candidates) {
-    if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(c.mime)) return c;
-  }
-  return { mime: 'video/webm', ext: 'webm' };
+interface FrameRenderer {
+  render: (t: number) => void;
+  canvas: HTMLCanvasElement;
+  total: number;
 }
 
-export async function exportFilm(project: Project, opts: ExportOptions): Promise<ExportResult> {
+// Build a deterministic frame renderer that composites the film at any time t.
+async function buildRenderer(project: Project, width: number, height: number): Promise<FrameRenderer> {
   const canon = ORIENTATION_DIMS[project.orientation];
-  const { width, height, fps, bitrate } = opts;
+  const out = document.createElement('canvas');
+  out.width = width;
+  out.height = height;
+  const ctx = out.getContext('2d')!;
 
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d')!;
-
-  // canonical offscreen buffers for transition compositing
   const main = document.createElement('canvas');
-  main.width = canon.w;
-  main.height = canon.h;
+  main.width = canon.w; main.height = canon.h;
   const mainCtx = main.getContext('2d')!;
   const prevC = document.createElement('canvas');
-  prevC.width = canon.w;
-  prevC.height = canon.h;
+  prevC.width = canon.w; prevC.height = canon.h;
   const prevCtx = prevC.getContext('2d')!;
   const curC = document.createElement('canvas');
-  curC.width = canon.w;
-  curC.height = canon.h;
+  curC.width = canon.w; curC.height = canon.h;
   const curCtx = curC.getContext('2d')!;
 
   const slides = project.slides;
   const starts: number[] = [];
   let acc = 0;
-  for (const s of slides) {
-    starts.push(acc);
-    acc += s.durationSeconds;
-  }
+  for (const s of slides) { starts.push(acc); acc += s.durationSeconds; }
   const total = acc;
 
-  // preload all images
   const paths = new Set<string>();
   for (const s of slides) {
     if (s.imagePath) paths.add(s.imagePath);
@@ -74,12 +58,12 @@ export async function exportFilm(project: Project, opts: ExportOptions): Promise
   }
   await Promise.all([...paths].map((p) => loadImage(p)));
 
-  function slideIndexAt(t: number): number {
+  const slideIndexAt = (t: number) => {
     for (let i = slides.length - 1; i >= 0; i--) if (t >= starts[i] - 1e-6) return i;
     return 0;
-  }
+  };
 
-  function renderCanonical(t: number) {
+  const render = (t: number) => {
     const idx = slideIndexAt(t);
     const slide: Slide = slides[idx];
     const localMs = (t - starts[idx]) * 1000;
@@ -93,50 +77,126 @@ export async function exportFilm(project: Project, opts: ExportOptions): Promise
     } else {
       drawSlide(mainCtx, slide, canon.w, canon.h, { localMs });
     }
-    // scale canonical onto output canvas
     ctx.clearRect(0, 0, width, height);
     ctx.drawImage(main, 0, 0, width, height);
-  }
-
-  const { mime, ext } = pickMime();
-  const stream = canvas.captureStream(fps);
-  const chunks: BlobPart[] = [];
-  const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: bitrate });
-  recorder.ondataavailable = (e) => {
-    if (e.data && e.data.size > 0) chunks.push(e.data);
   };
 
-  const done = new Promise<void>((resolve) => {
-    recorder.onstop = () => resolve();
+  return { render, canvas: out, total };
+}
+
+function supportsWebCodecs(): boolean {
+  return typeof window !== 'undefined' && 'VideoEncoder' in window && 'VideoFrame' in window;
+}
+
+async function pickAvcCodec(width: number, height: number, fps: number, bitrate: number): Promise<string | null> {
+  const candidates = ['avc1.640034', 'avc1.640033', 'avc1.4d0032', 'avc1.4d0028', 'avc1.42E01E'];
+  for (const codec of candidates) {
+    try {
+      const res = await VideoEncoder.isConfigSupported({ codec, width, height, bitrate, framerate: fps });
+      if (res?.supported) return codec;
+    } catch { /* keep trying */ }
+  }
+  return null;
+}
+
+// Frame-accurate MP4 via WebCodecs + mp4-muxer (seekable, correct duration).
+async function exportWithWebCodecs(r: FrameRenderer, opts: ExportOptions): Promise<ExportResult | null> {
+  const { width, height, fps, bitrate } = opts;
+  const codec = await pickAvcCodec(width, height, fps, bitrate);
+  if (!codec) return null;
+
+  const muxer = new Muxer({
+    target: new ArrayBufferTarget(),
+    video: { codec: 'avc', width, height },
+    fastStart: 'in-memory',
   });
 
+  let encoderError: unknown = null;
+  const encoder = new VideoEncoder({
+    output: (chunk: EncodedVideoChunk, meta?: EncodedVideoChunkMetadata) => muxer.addVideoChunk(chunk, meta),
+    error: (e: unknown) => { encoderError = e; },
+  });
+  encoder.configure({ codec, width, height, bitrate, framerate: fps, latencyMode: 'quality' });
+
+  const totalFrames = Math.max(1, Math.round(r.total * fps));
+  const frameDurUs = 1_000_000 / fps;
+
+  for (let i = 0; i < totalFrames; i++) {
+    if (opts.signal?.cancelled) { encoder.close(); return null; }
+    if (encoderError) throw encoderError;
+    const t = i / fps;
+    r.render(t);
+    const frame = new VideoFrame(r.canvas, { timestamp: Math.round(i * frameDurUs), duration: Math.round(frameDurUs) });
+    encoder.encode(frame, { keyFrame: i % fps === 0 });
+    frame.close();
+    // Avoid unbounded queue + let the UI breathe.
+    if (encoder.encodeQueueSize > 8) {
+      await new Promise<void>((res) => setTimeout(res, 0));
+    }
+    if (i % 3 === 0) opts.onProgress?.(Math.min(0.98, i / totalFrames));
+  }
+
+  await encoder.flush();
+  encoder.close();
+  if (encoderError) throw encoderError;
+  muxer.finalize();
+  opts.onProgress?.(1);
+  const { buffer } = muxer.target as ArrayBufferTarget;
+  return { blob: new Blob([buffer], { type: 'video/mp4' }), ext: 'mp4', mime: 'video/mp4' };
+}
+
+// Fallback: real-time MediaRecorder capture (less seekable, but widely supported).
+async function exportWithMediaRecorder(r: FrameRenderer, opts: ExportOptions): Promise<ExportResult> {
+  const candidates = [
+    { mime: 'video/webm;codecs=vp9', ext: 'webm' },
+    { mime: 'video/webm', ext: 'webm' },
+  ];
+  let chosen = candidates[candidates.length - 1];
+  for (const c of candidates) {
+    if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(c.mime)) { chosen = c; break; }
+  }
+  const stream = r.canvas.captureStream(opts.fps);
+  const chunks: BlobPart[] = [];
+  const recorder = new MediaRecorder(stream, { mimeType: chosen.mime, videoBitsPerSecond: opts.bitrate });
+  recorder.ondataavailable = (e) => { if (e.data?.size) chunks.push(e.data); };
+  const stopped = new Promise<void>((res) => { recorder.onstop = () => res(); });
   recorder.start(200);
 
-  // Real-time render loop
   await new Promise<void>((resolve) => {
     const startWall = performance.now();
     const step = () => {
-      if (opts.signal?.cancelled) {
-        resolve();
-        return;
-      }
+      if (opts.signal?.cancelled) return resolve();
       const t = (performance.now() - startWall) / 1000;
-      const clamped = Math.min(t, total);
-      renderCanonical(clamped);
-      opts.onProgress?.(Math.min(0.99, clamped / total));
-      if (t >= total) {
-        resolve();
-        return;
-      }
+      r.render(Math.min(t, r.total));
+      opts.onProgress?.(Math.min(0.99, t / r.total));
+      if (t >= r.total) return resolve();
       requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
   });
 
   recorder.stop();
-  await done;
+  await stopped;
   opts.onProgress?.(1);
-
-  const blob = new Blob(chunks, { type: mime });
-  return { blob, ext, mime };
+  return { blob: new Blob(chunks, { type: chosen.mime }), ext: chosen.ext, mime: chosen.mime };
 }
+
+export async function exportFilm(project: Project, opts: ExportOptions): Promise<ExportResult> {
+  // Ensure even dimensions for the encoder.
+  const width = opts.width % 2 ? opts.width + 1 : opts.width;
+  const height = opts.height % 2 ? opts.height + 1 : opts.height;
+  const o = { ...opts, width, height };
+  const r = await buildRenderer(project, width, height);
+
+  if (supportsWebCodecs()) {
+    try {
+      const res = await exportWithWebCodecs(r, o);
+      if (res) return res;
+    } catch (e) {
+      console.warn('WebCodecs export failed, falling back to MediaRecorder', e);
+    }
+  }
+  return exportWithMediaRecorder(r, o);
+}
+
+export const exportSupportsMp4 = () => supportsWebCodecs();

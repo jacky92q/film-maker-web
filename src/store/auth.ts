@@ -4,6 +4,7 @@ export interface User {
   name: string;
   email: string;
   guest?: boolean;
+  provider?: 'email' | 'google' | 'guest';
 }
 
 const LS_KEY = 'fm_user';
@@ -24,8 +25,8 @@ function save(u: User | null) {
 
 interface AuthState {
   user: User | null;
-  ready: boolean;
   login: (email: string, name?: string) => void;
+  loginWithGoogle: () => void;
   guest: () => void;
   logout: () => void;
 }
@@ -34,14 +35,19 @@ interface AuthState {
 // localStorage. Any email/password is accepted; this is a personal creative tool.
 export const useAuth = create<AuthState>((set) => ({
   user: load(),
-  ready: true,
   login: (email, name) => {
-    const u: User = { email, name: name || nameFromEmail(email) };
+    const u: User = { email, name: name || nameFromEmail(email), provider: 'email' };
+    save(u);
+    set({ user: u });
+  },
+  loginWithGoogle: () => {
+    // Demo Google account (no real OAuth available on a static host).
+    const u: User = { email: 'you@gmail.com', name: 'Google User', provider: 'google' };
     save(u);
     set({ user: u });
   },
   guest: () => {
-    const u: User = { email: '', name: 'Guest', guest: true };
+    const u: User = { email: '', name: 'Guest', guest: true, provider: 'guest' };
     save(u);
     set({ user: u });
   },
