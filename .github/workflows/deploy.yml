@@ -33,6 +33,12 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          # Add a repo secret named GOOGLE_CLIENT_ID (a Google OAuth Web client ID
+          # whose Authorized JavaScript origins include https://jacky92q.github.io)
+          # to enable real Google sign-in. Without it, a clearly-labeled demo
+          # button is shown instead.
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

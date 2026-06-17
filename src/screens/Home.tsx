@@ -37,29 +37,33 @@ export default function Home() {
 
       <main className="mx-auto max-w-6xl px-5 pb-20">
         {/* Hero */}
-        <section className="relative mt-6 overflow-hidden rounded-3xl bg-gradient-to-br from-[#2A1408] via-[#7B3F18] to-primary px-8 py-14 text-white shadow-elevated md:px-14 md:py-20">
-          <div className="absolute inset-0 opacity-[0.12] [background-image:radial-gradient(circle_at_15%_20%,white_1.5px,transparent_1.5px)] [background-size:30px_30px]" />
-          <Film className="absolute -right-12 -top-12 h-72 w-72 text-white/[0.06]" />
-          <div className="relative max-w-2xl">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur">
+        <motion.section
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+          className="relative mt-6 overflow-hidden rounded-xl3 bg-brand bg-[length:200%_200%] px-8 py-14 text-white shadow-elevated animate-gradient md:px-14 md:py-20"
+        >
+          <div className="pointer-events-none absolute -left-16 -top-16 h-72 w-72 rounded-full bg-white/20 blur-3xl animate-blob" />
+          <div className="pointer-events-none absolute -bottom-16 right-10 h-80 w-80 rounded-full bg-[#7C6CF0]/40 blur-3xl animate-blob" style={{ animationDelay: '5s' }} />
+          <Film className="absolute -right-12 -top-12 h-72 w-72 text-white/[0.08] animate-floaty" />
+          <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }} className="relative max-w-2xl">
+            <motion.span variants={fadeUp} className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold backdrop-blur">
               <Sparkles className="h-3.5 w-3.5" /> {t('welcomeBack')}, {user?.name}
-            </span>
-            <h1 className="mt-5 font-serif text-4xl font-bold leading-[1.1] md:text-6xl">
+            </motion.span>
+            <motion.h1 variants={fadeUp} className="mt-5 font-serif text-4xl font-bold leading-[1.08] drop-shadow-sm md:text-6xl">
               {t('appTagline')}
-            </h1>
-            <p className="mt-4 max-w-lg text-base text-white/75 md:text-lg">
+            </motion.h1>
+            <motion.p variants={fadeUp} className="mt-4 max-w-lg text-base text-white/90 md:text-lg">
               {t('filmTitlePrompt')}. {t('myFilmsSub')}.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <button onClick={() => setDialog(true)} className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-bold text-primary-dark shadow-lg transition hover:bg-white/90 active:scale-95">
+            </motion.p>
+            <motion.div variants={fadeUp} className="mt-8 flex flex-wrap gap-3">
+              <button onClick={() => setDialog(true)} className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-bold text-primary-dark shadow-lg transition hover:scale-105 active:scale-95">
                 <Plus className="h-4 w-4" /> {t('newFilm')}
               </button>
-              <Link to="/projects" className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 py-3 text-sm font-bold text-white backdrop-blur transition hover:bg-white/20">
+              <Link to="/projects" className="inline-flex items-center gap-2 rounded-xl border border-white/40 bg-white/10 px-6 py-3 text-sm font-bold text-white backdrop-blur transition hover:bg-white/25">
                 {t('myFilms')} <ArrowRight className="h-4 w-4" />
               </Link>
-            </div>
-          </div>
-        </section>
+            </motion.div>
+          </motion.div>
+        </motion.section>
 
         {/* Stats */}
         <section className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3">
@@ -159,12 +163,21 @@ function RecentCard({ project, slides, onClick }: { project: Project; slides: st
   );
 }
 
+const fadeUp = { hidden: { opacity: 0, y: 18 }, show: { opacity: 1, y: 0 } };
+
 function FeatureCard({ color, icon, title, text }: { color: string; icon: React.ReactNode; title: string; text: string }) {
   return (
-    <div className="rounded-2xl border border-line bg-surface p-6 shadow-soft">
-      <div className={`grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br ${color} text-white`}>{icon}</div>
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-60px' }}
+      whileHover={{ y: -6 }}
+      transition={{ duration: 0.4 }}
+      className="rounded-2xl border border-line bg-surface p-6 shadow-soft"
+    >
+      <div className={`grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br ${color} text-white shadow-lg`}>{icon}</div>
       <h3 className="mt-4 text-lg font-bold text-text-dark">{title}</h3>
       <p className="mt-1.5 text-sm text-text-mid">{text}</p>
-    </div>
+    </motion.div>
   );
 }
