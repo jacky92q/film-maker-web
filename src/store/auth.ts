@@ -3,6 +3,7 @@ import { create } from 'zustand';
 export interface User {
   name: string;
   email: string;
+  picture?: string;
   guest?: boolean;
   provider?: 'email' | 'google' | 'guest';
 }
@@ -26,7 +27,7 @@ function save(u: User | null) {
 interface AuthState {
   user: User | null;
   login: (email: string, name?: string) => void;
-  loginWithGoogle: () => void;
+  loginWithGoogle: (profile: { name: string; email: string; picture?: string }) => void;
   guest: () => void;
   logout: () => void;
 }
@@ -40,9 +41,8 @@ export const useAuth = create<AuthState>((set) => ({
     save(u);
     set({ user: u });
   },
-  loginWithGoogle: () => {
-    // Demo Google account (no real OAuth available on a static host).
-    const u: User = { email: 'you@gmail.com', name: 'Google User', provider: 'google' };
+  loginWithGoogle: (profile) => {
+    const u: User = { email: profile.email, name: profile.name, picture: profile.picture, provider: 'google' };
     save(u);
     set({ user: u });
   },

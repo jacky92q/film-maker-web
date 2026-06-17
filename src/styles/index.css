@@ -20,10 +20,34 @@ body,
 
 body {
   font-family: 'Lato', 'NotoSansKR', system-ui, sans-serif;
-  background: #faf5ed;
-  color: #2c1810;
+  background: #fbfaf8;
+  color: #1e1b18;
   overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Editor stage backdrop — clearly distinct from the editable canvas */
+.stage-grid {
+  background-color: #eef0f4;
+  background-image:
+    linear-gradient(45deg, #e2e5ec 25%, transparent 25%),
+    linear-gradient(-45deg, #e2e5ec 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e2e5ec 75%),
+    linear-gradient(-45deg, transparent 75%, #e2e5ec 75%);
+  background-size: 22px 22px;
+  background-position: 0 0, 0 11px, 11px -11px, -11px 0;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #ff9a56, #f2547b 60%, #a86cf0);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: saturate(180%) blur(16px);
 }
 
 /* Hide scrollbars on horizontal scrollers but keep functionality */

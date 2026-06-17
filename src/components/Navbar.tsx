@@ -63,9 +63,13 @@ export default function Navbar({ onNewFilm }: { onNewFilm?: () => void }) {
 
           <div className="relative">
             <button onClick={() => setMenu(!menu)} className="flex items-center gap-1 rounded-full pl-1 pr-2 hover:bg-black/5">
-              <span className="grid h-9 w-9 place-items-center rounded-full bg-primary/15 text-sm font-bold text-primary">
-                {user?.name?.[0]?.toUpperCase() ?? 'G'}
-              </span>
+              {user?.picture ? (
+                <img src={user.picture} alt="" referrerPolicy="no-referrer" className="h-9 w-9 rounded-full object-cover" />
+              ) : (
+                <span className="grid h-9 w-9 place-items-center rounded-full bg-primary/15 text-sm font-bold text-primary">
+                  {user?.name?.[0]?.toUpperCase() ?? 'G'}
+                </span>
+              )}
               <ChevronDown className="h-4 w-4 text-text-mid" />
             </button>
             <AnimatePresence>

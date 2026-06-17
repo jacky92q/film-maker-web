@@ -92,7 +92,7 @@ export default function Editor() {
   }, [undo, redo, del, selection.kind]);
 
   if (!project) {
-    return <div className="grid h-screen place-items-center bg-dark-bg text-dark-text">…</div>;
+    return <div className="grid h-screen place-items-center bg-ed-bg text-ed-text">…</div>;
   }
   const slide = project.slides[Math.min(slideIndex, project.slides.length - 1)];
 
@@ -107,10 +107,10 @@ export default function Editor() {
   }
 
   return (
-    <div className="flex h-[100dvh] flex-col bg-dark-bg text-cream">
+    <div className="flex h-[100dvh] flex-col bg-ed-bg text-ed-text-dark">
       {/* Top bar */}
-      <header className="relative z-20 flex h-14 shrink-0 items-center gap-2 border-b border-dark-line bg-dark-surface px-3">
-        <button onClick={() => nav('/projects')} className="grid h-9 w-9 place-items-center rounded-lg text-cream hover:bg-white/10" title={t('myFilms')}>
+      <header className="relative z-20 flex h-14 shrink-0 items-center gap-2 border-b border-ed-line bg-ed-surface px-3">
+        <button onClick={() => nav('/projects')} className="grid h-9 w-9 place-items-center rounded-lg text-ed-text-dark hover:bg-black/5" title={t('myFilms')}>
           <ArrowLeft className="h-5 w-5" />
         </button>
         {editingTitle ? (
@@ -119,25 +119,25 @@ export default function Editor() {
             defaultValue={project.title}
             onBlur={(e) => { setTitle(e.target.value || t('untitledFilm')); setEditingTitle(false); }}
             onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-            className="min-w-0 flex-1 rounded-lg bg-dark-surface-2 px-3 py-1.5 font-serif text-[16px] text-cream outline-none ring-1 ring-gold/40"
+            className="min-w-0 flex-1 rounded-lg bg-ed-surface-2 px-3 py-1.5 font-serif text-[16px] text-ed-text-dark outline-none ring-1 ring-primary/40"
           />
         ) : (
           <button onClick={() => setEditingTitle(true)} className="flex min-w-0 flex-1 items-center gap-1.5 text-left">
             <span className="truncate font-serif text-[16px] font-bold">{project.title || t('untitledFilm')}</span>
-            <Pencil className="h-3.5 w-3.5 shrink-0 text-dark-text" />
+            <Pencil className="h-3.5 w-3.5 shrink-0 text-ed-text" />
           </button>
         )}
         <div className="ml-auto flex items-center gap-1">
-          <button onClick={undo} className="grid h-9 w-9 place-items-center rounded-lg text-dark-text hover:bg-white/10" title="Undo"><Undo2 className="h-[18px] w-[18px]" /></button>
-          <button onClick={redo} className="grid h-9 w-9 place-items-center rounded-lg text-dark-text hover:bg-white/10" title="Redo"><Redo2 className="h-[18px] w-[18px]" /></button>
-          <button onClick={doSave} className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-cream hover:bg-white/10 sm:flex">
-            {saved ? <Check className="h-4 w-4 text-emerald-400" /> : <Save className={`h-4 w-4 ${dirty ? 'text-gold' : 'text-dark-text'}`} />}
+          <button onClick={undo} className="grid h-9 w-9 place-items-center rounded-lg text-ed-text hover:bg-black/5" title="Undo"><Undo2 className="h-[18px] w-[18px]" /></button>
+          <button onClick={redo} className="grid h-9 w-9 place-items-center rounded-lg text-ed-text hover:bg-black/5" title="Redo"><Redo2 className="h-[18px] w-[18px]" /></button>
+          <button onClick={doSave} className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-ed-text-dark hover:bg-black/5 sm:flex">
+            {saved ? <Check className="h-4 w-4 text-emerald-400" /> : <Save className={`h-4 w-4 ${dirty ? 'text-primary' : 'text-ed-text'}`} />}
             {saved ? t('done') : t('save')}
           </button>
-          <button onClick={goPreview} className="hidden items-center gap-1.5 rounded-lg border border-dark-line px-3 py-2 text-sm font-semibold text-cream hover:bg-white/10 sm:flex">
+          <button onClick={goPreview} className="hidden items-center gap-1.5 rounded-lg border border-ed-line px-3 py-2 text-sm font-semibold text-ed-text-dark hover:bg-black/5 sm:flex">
             <Play className="h-4 w-4" /> {t('preview')}
           </button>
-          <button onClick={goExport} className="flex items-center gap-1.5 rounded-lg bg-gold px-3.5 py-2 text-sm font-bold text-black hover:brightness-105">
+          <button onClick={goExport} className="flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-bold text-white hover:brightness-105">
             <Download className="h-4 w-4" /> {t('export')}
           </button>
         </div>
@@ -146,7 +146,7 @@ export default function Editor() {
       {/* Body */}
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         {/* Left tool rail (desktop) */}
-        <nav className="hidden w-20 shrink-0 flex-col items-center gap-1 border-r border-dark-line bg-dark-surface py-3 lg:flex">
+        <nav className="hidden w-20 shrink-0 flex-col items-center gap-1 border-r border-ed-line bg-ed-surface py-3 lg:flex">
           {TOOLS.map((tool) => {
             const Icon = tool.icon;
             const active = section === tool.key;
@@ -154,7 +154,7 @@ export default function Editor() {
               <button
                 key={tool.key}
                 onClick={() => setSection(tool.key)}
-                className={`flex w-16 flex-col items-center gap-1 rounded-xl py-2.5 text-[10px] font-semibold transition ${active ? 'bg-gold/15 text-gold' : 'text-dark-text hover:bg-white/5 hover:text-cream'}`}
+                className={`flex w-16 flex-col items-center gap-1 rounded-xl py-2.5 text-[10px] font-semibold transition ${active ? 'bg-primary/10 text-primary' : 'text-ed-text hover:bg-black/5 hover:text-ed-text-dark'}`}
               >
                 <Icon className="h-5 w-5" />
                 {t(tool.labelKey)}
@@ -165,44 +165,44 @@ export default function Editor() {
 
         {/* Center: stage + timeline */}
         <div className="flex min-h-0 flex-1 flex-col">
-          <div className="flex min-h-[34vh] flex-1 items-center justify-center bg-[#0a0a0a] p-3 sm:p-6">
+          <div className="flex min-h-[34vh] flex-1 items-center justify-center stage-grid p-3 sm:p-6">
             <EditorCanvas orientation={project.orientation} />
           </div>
 
           {/* Timeline */}
-          <div className="flex shrink-0 items-center gap-2 border-t border-dark-line bg-dark-surface px-3 py-2.5">
+          <div className="flex shrink-0 items-center gap-2 border-t border-ed-line bg-ed-surface px-3 py-2.5">
             <div className="no-scrollbar flex flex-1 items-center gap-2 overflow-x-auto">
               {project.slides.map((s, i) => (
                 <button
                   key={s.id}
                   onClick={() => setSlideIndex(i)}
-                  className={`relative h-16 shrink-0 overflow-hidden rounded-lg border-2 transition ${i === slideIndex ? 'border-gold' : 'border-transparent hover:border-white/20'}`}
+                  className={`relative h-16 shrink-0 overflow-hidden rounded-lg border-2 transition ${i === slideIndex ? 'border-primary' : 'border-transparent hover:border-black/15'}`}
                   style={{ aspectRatio: project.orientation === 'portrait' ? '9/16' : '16/9' }}
                 >
                   <SlideThumb slide={s} orientation={project.orientation} />
                   <span className="absolute left-1 top-1 rounded bg-black/60 px-1 text-[9px] text-white">{i + 1}</span>
                 </button>
               ))}
-              <button onClick={() => setTemplateOpen(true)} className="grid h-16 w-12 shrink-0 place-items-center rounded-lg border-2 border-dashed border-dark-line text-dark-text hover:border-gold hover:text-gold" title={t('addSlide')}>
+              <button onClick={() => setTemplateOpen(true)} className="grid h-16 w-12 shrink-0 place-items-center rounded-lg border-2 border-dashed border-ed-line text-ed-text hover:border-primary hover:text-primary" title={t('addSlide')}>
                 <Plus className="h-5 w-5" />
               </button>
             </div>
             <div className="flex shrink-0 gap-1">
-              <button onClick={() => duplicateSlide(slide.id)} className="grid h-9 w-9 place-items-center rounded-lg bg-dark-surface-2 text-dark-text hover:bg-white/10" title={t('duplicate')}><Copy className="h-4 w-4" /></button>
-              <button onClick={() => deleteSlide(slide.id)} disabled={project.slides.length <= 1} className="grid h-9 w-9 place-items-center rounded-lg bg-dark-surface-2 text-dark-text hover:bg-danger/20 hover:text-danger disabled:opacity-30" title={t('delete')}><Trash2 className="h-4 w-4" /></button>
+              <button onClick={() => duplicateSlide(slide.id)} className="grid h-9 w-9 place-items-center rounded-lg bg-ed-surface-2 text-ed-text hover:bg-black/5" title={t('duplicate')}><Copy className="h-4 w-4" /></button>
+              <button onClick={() => deleteSlide(slide.id)} disabled={project.slides.length <= 1} className="grid h-9 w-9 place-items-center rounded-lg bg-ed-surface-2 text-ed-text hover:bg-danger/10 hover:text-danger disabled:opacity-30" title={t('delete')}><Trash2 className="h-4 w-4" /></button>
             </div>
           </div>
         </div>
 
         {/* Right panel */}
-        <aside className="flex max-h-[44vh] shrink-0 flex-col border-t border-dark-line bg-dark-surface lg:max-h-none lg:w-[360px] lg:border-l lg:border-t-0">
+        <aside className="flex max-h-[44vh] shrink-0 flex-col border-t border-ed-line bg-ed-surface lg:max-h-none lg:w-[360px] lg:border-l lg:border-t-0">
           {/* Mobile tool tabs */}
-          <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-dark-line p-2 lg:hidden">
+          <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-ed-line p-2 lg:hidden">
             {TOOLS.map((tool) => {
               const Icon = tool.icon;
               const active = section === tool.key;
               return (
-                <button key={tool.key} onClick={() => setSection(tool.key)} className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-[12px] font-semibold ${active ? 'bg-gold/15 text-gold' : 'text-dark-text'}`}>
+                <button key={tool.key} onClick={() => setSection(tool.key)} className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-[12px] font-semibold ${active ? 'bg-primary/10 text-primary' : 'text-ed-text'}`}>
                   <Icon className="h-4 w-4" /> {t(tool.labelKey)}
                 </button>
               );
@@ -210,10 +210,10 @@ export default function Editor() {
           </div>
 
           {/* Panel header with Add */}
-          <div className="flex items-center justify-between border-b border-dark-line px-4 py-3">
-            <h3 className="font-serif text-base font-bold text-cream">{t(TOOLS.find((x) => x.key === section)!.labelKey)}</h3>
+          <div className="flex items-center justify-between border-b border-ed-line px-4 py-3">
+            <h3 className="font-serif text-base font-bold text-ed-text-dark">{t(TOOLS.find((x) => x.key === section)!.labelKey)}</h3>
             {(section === 'photo' || section === 'text' || section === 'sticker') && (
-              <button onClick={handleAdd} className="flex items-center gap-1.5 rounded-lg bg-gold px-3 py-1.5 text-[12px] font-bold text-black hover:brightness-105">
+              <button onClick={handleAdd} className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-[12px] font-bold text-white hover:brightness-105">
                 <Plus className="h-3.5 w-3.5" /> {section === 'text' ? t('addTitleBtn') : t('create')}
               </button>
             )}
@@ -225,8 +225,8 @@ export default function Editor() {
             {section === 'text' && (selection.kind === 'text' && slide.textLayers.find((l) => l.id === selection.id) ? <TextPanel layer={slide.textLayers.find((l) => l.id === selection.id)!} /> : <EmptyText />)}
             {section === 'sticker' && (selection.kind === 'sticker' && slide.stickerLayers.find((l) => l.id === selection.id) ? <StickerPanel layer={slide.stickerLayers.find((l) => l.id === selection.id)!} /> : (
               <div className="flex flex-col items-center py-10 text-center">
-                <p className="text-sm font-semibold text-dark-text">{t('stickerPickPrompt')}</p>
-                <button onClick={() => setStickerOpen(true)} className="mt-4 flex items-center gap-1.5 rounded-lg bg-gold px-4 py-2 text-[13px] font-bold text-black"><Plus className="h-4 w-4" /> {t('tabSticker')}</button>
+                <p className="text-sm font-semibold text-ed-text-dark">{t('stickerPickPrompt')}</p>
+                <button onClick={() => setStickerOpen(true)} className="mt-4 flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-[13px] font-bold text-white"><Plus className="h-4 w-4" /> {t('tabSticker')}</button>
               </div>
             ))}
             {section === 'music' && <MusicPanel />}
@@ -240,16 +240,16 @@ export default function Editor() {
       <AnimatePresence>
         {templateOpen && (
           <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setTemplateOpen(false)}>
-            <motion.div className="w-full max-w-md rounded-3xl bg-dark-surface p-5 shadow-elevated" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} onClick={(e) => e.stopPropagation()}>
-              <h3 className="font-serif text-lg font-bold text-cream">{t('chooseTemplate')}</h3>
-              <p className="mb-4 text-[13px] text-dark-text">{t('templateSub')}</p>
+            <motion.div className="w-full max-w-md rounded-3xl bg-surface p-5 shadow-elevated" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} onClick={(e) => e.stopPropagation()}>
+              <h3 className="font-serif text-lg font-bold text-text-dark">{t('chooseTemplate')}</h3>
+              <p className="mb-4 text-[13px] text-text-mid">{t('templateSub')}</p>
               <div className="grid grid-cols-1 gap-2">
                 {SLIDE_TEMPLATES.map((tpl) => (
-                  <button key={tpl} onClick={() => { addSlideAction(tpl, t); setTemplateOpen(false); }} className="flex items-center gap-3 rounded-xl bg-dark-surface-2 p-3 text-left hover:bg-white/10">
-                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-gold/15 text-gold"><Plus className="h-4 w-4" /></span>
+                  <button key={tpl} onClick={() => { addSlideAction(tpl, t); setTemplateOpen(false); }} className="flex items-center gap-3 rounded-xl bg-surface-2 p-3 text-left hover:bg-black/5">
+                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary"><Plus className="h-4 w-4" /></span>
                     <span>
-                      <span className="block text-sm font-bold text-cream">{el('template', tpl)}</span>
-                      <span className="block text-[11px] text-dark-text">{t(TEMPLATE_DESC[tpl])}</span>
+                      <span className="block text-sm font-bold text-text-dark">{el('template', tpl)}</span>
+                      <span className="block text-[11px] text-text-mid">{t(TEMPLATE_DESC[tpl])}</span>
                     </span>
                   </button>
                 ))}

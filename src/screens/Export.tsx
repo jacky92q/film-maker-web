@@ -11,6 +11,7 @@ import { ORIENTATION_DIMS } from '../domain/enums';
 import { exportFilm } from '../render/exporter';
 import { drawSlide } from '../render/drawSlide';
 import { loadImage } from '../lib/imageStore';
+import { saveFile, isMobile } from '../lib/download';
 import { Button } from '../components/ui';
 
 type Status = 'idle' | 'exporting' | 'done' | 'error';
@@ -36,6 +37,7 @@ export default function ExportScreen() {
   const [error, setError] = useState('');
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [resultExt, setResultExt] = useState('mp4');
+  const resultBlob = useRef<Blob | null>(null);
   const signal = useRef({ cancelled: false });
 
   const duration = useMemo(() => (project ? totalDuration(project) : 0), [project]);
@@ -60,14 +62,18 @@ export default function ExportScreen() {
       });
       if (signal.current.cancelled) { setStatus('idle'); return; }
       const url = URL.createObjectURL(result.blob);
+      resultBlob.current = result.blob;
       setResultUrl(url);
       setResultExt(result.ext);
-      // trigger download
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${sanitize(project.title)}.${result.ext}`;
-      a.click();
       setStatus('done');
+      // Desktop browsers can auto-download immediately; on mobile the user taps
+      // the Save button so the native share/save sheet can appear within a gesture.
+      if (!isMobile()) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${sanitize(project.title)}.${result.ext}`;
+        a.click();
+      }
     } catch (e) {
       console.error(e);
       setError(t('exportFailedDefault'));
@@ -165,8 +171,8 @@ export default function ExportScreen() {
           <div className="flex flex-col items-center py-20">
             <div className="relative h-40 w-40">
               <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
-                <circle cx="50" cy="50" r="44" fill="none" stroke="#ECE0D4" strokeWidth="7" />
-                <circle cx="50" cy="50" r="44" fill="none" stroke="#C07842" strokeWidth="7" strokeLinecap="round" strokeDasharray={2 * Math.PI * 44} strokeDashoffset={2 * Math.PI * 44 * (1 - progress)} style={{ transition: 'stroke-dashoffset 0.15s linear' }} />
+                <circle cx="50" cy="50" r="44" fill="none" stroke="#ECE7DF" strokeWidth="7" />
+                <circle cx="50" cy="50" r="44" fill="none" stroke="#E07A3C" strokeWidth="7" strokeLinecap="round" strokeDasharray={2 * Math.PI * 44} strokeDashoffset={2 * Math.PI * 44 * (1 - progress)} style={{ transition: 'stroke-dashoffset 0.15s linear' }} />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-4xl font-extrabold text-text-dark">{Math.round(progress * 100)}%</span>
@@ -189,14 +195,17 @@ export default function ExportScreen() {
             {resultUrl && (
               <video src={resultUrl} controls playsInline className="mt-6 w-full max-w-xl rounded-2xl border border-line bg-black shadow-card" style={{ aspectRatio: project.orientation === 'portrait' ? '9/16' : '16/9' }} />
             )}
-            <div className="mt-6 flex gap-2">
-              {resultUrl && (
-                <a href={resultUrl} download={`${sanitize(project.title)}.${resultExt}`} className="inline-flex items-center gap-2 rounded-[14px] bg-primary px-6 py-3 text-sm font-bold text-white hover:brightness-105">
-                  <Download className="h-5 w-5" /> {t('doneButton')}
-                </a>
-              )}
-              <Button variant="outline" onClick={() => { setStatus('idle'); setResultUrl(null); }}>{t('exportAgain')}</Button>
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
+              <Button
+                onClick={() => resultBlob.current && saveFile(resultBlob.current, `${sanitize(project.title)}.${resultExt}`, project.title)}
+              >
+                <Download className="h-5 w-5" /> {t('share')} / {t('doneButton')}
+              </Button>
+              <Button variant="outline" onClick={() => { setStatus('idle'); setResultUrl(null); resultBlob.current = null; }}>{t('exportAgain')}</Button>
             </div>
+            <p className="mt-3 text-xs text-text-mid">
+              {isMobile() ? t('savedNote') : t('exportCompleteSub')}
+            </p>
           </motion.div>
         )}
 

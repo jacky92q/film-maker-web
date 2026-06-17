@@ -17,12 +17,12 @@ import type { Slide, TextLayer, PhotoLayer, StickerLayer } from '../domain/model
 
 function Tabs({ tabs, active, onChange }: { tabs: string[]; active: number; onChange: (i: number) => void }) {
   return (
-    <div className="mb-4 flex gap-1 rounded-xl bg-dark-surface-2 p-1">
+    <div className="mb-4 flex gap-1 rounded-xl bg-ed-surface-2 p-1">
       {tabs.map((tName, i) => (
         <button
           key={tName}
           onClick={() => onChange(i)}
-          className={`flex-1 rounded-lg py-1.5 text-[12px] font-bold transition-all ${active === i ? 'bg-gold text-black' : 'text-dark-text'}`}
+          className={`flex-1 rounded-lg py-1.5 text-[12px] font-bold transition-all ${active === i ? 'bg-primary text-white shadow-sm' : 'text-ed-text'}`}
         >
           {tName}
         </button>
@@ -64,7 +64,7 @@ export function SlidePanel({ slide }: { slide: Slide }) {
             )}
           </Section>
           {slide.imagePath && (
-            <Section title={t('secPhotoZoom')} right={<button className="text-[11px] text-gold" onClick={() => patch({ photoScale: 1, photoOffsetX: 0, photoOffsetY: 0 })}>{t('reset')}</button>}>
+            <Section title={t('secPhotoZoom')} right={<button className="text-[11px] font-semibold text-primary" onClick={() => patch({ photoScale: 1, photoOffsetX: 0, photoOffsetY: 0 })}>{t('reset')}</button>}>
               <Slider value={slide.photoScale} min={0.5} max={4} step={0.05} onChange={(v) => patch({ photoScale: v }, false)} onCommit={() => patch({}, true)} label={`${slide.photoScale.toFixed(1)}×`} />
             </Section>
           )}
@@ -143,7 +143,7 @@ export function PhotoPanel({ layer }: { layer: PhotoLayer }) {
             <IconBtn onClick={async () => { const p = await pickImage(); if (p) patch(layer.id, { imagePath: p }); }}><ImagePlus className="h-4 w-4" /> {t('changePhoto')}</IconBtn>
           </div>
           {cropMode ? (
-            <Section title={t('zoom')} right={<button className="text-[11px] text-gold" onClick={() => patch(layer.id, { cropScale: 1, cropOffsetX: 0, cropOffsetY: 0 })}>{t('reset')}</button>}>
+            <Section title={t('zoom')} right={<button className="text-[11px] font-semibold text-primary" onClick={() => patch(layer.id, { cropScale: 1, cropOffsetX: 0, cropOffsetY: 0 })}>{t('reset')}</button>}>
               <Slider value={layer.cropScale} min={1} max={4} step={0.05} onChange={(v) => patch(layer.id, { cropScale: v }, false)} onCommit={() => patch(layer.id, {}, true)} label={`${layer.cropScale.toFixed(1)}×`} />
             </Section>
           ) : (
@@ -203,7 +203,7 @@ export function TextPanel({ layer }: { layer: TextLayer }) {
             onBlur={() => patch(layer.id, {}, true)}
             rows={2}
             placeholder={t('enterText')}
-            className="mb-4 w-full resize-none rounded-xl border border-dark-line bg-dark-surface-2 p-3 text-cream outline-none focus:border-gold"
+            className="mb-4 w-full resize-none rounded-xl border border-ed-line bg-ed-surface-2 p-3 text-ed-text-dark outline-none focus:border-primary"
           />
           <Section title={t('secType')}>
             <Segmented
@@ -297,13 +297,13 @@ export function MusicPanel() {
   return (
     <div>
       <Section title={t('tabMusic')}>
-        <p className="mb-3 text-[12px] text-dark-text/70">{t('tip2')}</p>
+        <p className="mb-3 text-[12px] text-ed-text">{t('tip2')}</p>
         <div className="grid grid-cols-2 gap-2">
           {MOODS.map((m) => (
             <button
               key={m}
               onClick={() => setMusic(m, `mood:${m}`)}
-              className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-[13px] font-semibold ${project?.musicName === m ? 'bg-gold text-black' : 'bg-dark-surface-2 text-dark-text'}`}
+              className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-[13px] font-semibold ${project?.musicName === m ? 'bg-primary text-white shadow-sm' : 'bg-ed-surface-2 text-ed-text-dark'}`}
             >
               <Music2 className="h-4 w-4" /> {m}
             </button>

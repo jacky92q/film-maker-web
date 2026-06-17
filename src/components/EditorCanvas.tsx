@@ -227,12 +227,12 @@ export default function EditorCanvas({ orientation }: { orientation: VideoOrient
     >
       <canvas
         ref={canvasRef}
-        className="max-h-full max-w-full rounded-lg shadow-2xl"
+        className="max-h-full max-w-full rounded-lg ring-1 ring-black/10 shadow-2xl"
         style={{ aspectRatio: `${dims.w}/${dims.h}` }}
       />
       {selBox && (
         <div
-          className="pointer-events-none absolute border-2 border-gold"
+          className="pointer-events-none absolute border-2 border-primary"
           style={{
             left: `calc(50% + ${selBox.cx}px)`,
             top: `calc(50% + ${selBox.cy}px)`,
