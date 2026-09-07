@@ -1,8 +1,7 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { MonitorPlay, Smartphone, Clapperboard } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { MonitorPlay, Smartphone } from 'lucide-react';
 import { useT } from '../i18n';
-import { Button } from './ui';
+import { Button, Label, Modal } from './ui';
 import type { VideoOrientation } from '../domain/enums';
 
 export default function NewFilmDialog({
@@ -18,74 +17,54 @@ export default function NewFilmDialog({
   const [title, setTitle] = useState('');
   const [orientation, setOrientation] = useState<VideoOrientation>('landscape');
 
+  useEffect(() => {
+    if (open) {
+      setTitle('');
+      setOrientation('landscape');
+    }
+  }, [open]);
+
+  const submit = () => onCreate(title.trim() || t('untitled'), orientation);
+
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-        >
-          <motion.div
-            className="w-full max-w-[420px] rounded-3xl bg-surface p-6 shadow-elevated"
-            initial={{ scale: 0.9, y: 20, opacity: 0 }}
-            animate={{ scale: 1, y: 0, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            transition={{ type: 'spring', damping: 22, stiffness: 280 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-1 flex items-center gap-2">
-              <Clapperboard className="h-5 w-5 text-primary" />
-              <h2 className="font-serif text-xl font-bold text-text-dark">{t('newWeddingFilm')}</h2>
-            </div>
-            <p className="mb-4 text-[13px] text-text-mid">{t('filmTitlePrompt')}</p>
+    <Modal open={open} onClose={onClose} title={t('newFilmTitle')} subtitle={t('newFilmBody')}>
+      <Label>{t('filmNameLabel')}</Label>
+      <input
+        autoFocus
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && submit()}
+        placeholder={t('filmNameHint')}
+        className="mt-2 w-full border-b border-line bg-transparent pb-2 font-display text-[22px] text-ink outline-none transition-colors placeholder:text-ink-3/45 focus:border-gold"
+      />
 
-            <input
-              autoFocus
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={t('filmTitleHint')}
-              className="w-full rounded-[14px] border border-line bg-surface-2 px-4 py-3.5 text-text-dark outline-none focus:border-primary"
-            />
+      <Label className="mt-7 block">{t('formatLabel')}</Label>
+      <div className="mt-2 grid grid-cols-2 gap-3">
+        <FormatCard
+          active={orientation === 'landscape'}
+          onClick={() => setOrientation('landscape')}
+          icon={<MonitorPlay className="h-5 w-5" strokeWidth={1.5} />}
+          title={t('formatLandscape')}
+          desc={t('formatLandscapeDesc')}
+          ratio="16 / 9"
+        />
+        <FormatCard
+          active={orientation === 'portrait'}
+          onClick={() => setOrientation('portrait')}
+          icon={<Smartphone className="h-5 w-5" strokeWidth={1.5} />}
+          title={t('formatPortrait')}
+          desc={t('formatPortraitDesc')}
+          ratio="9 / 16"
+        />
+      </div>
 
-            <p className="mb-2 mt-5 text-xs font-semibold text-text-mid">{t('videoFormat')}</p>
-            <div className="grid grid-cols-2 gap-3">
-              <FormatCard
-                active={orientation === 'landscape'}
-                onClick={() => setOrientation('landscape')}
-                icon={<MonitorPlay className="h-7 w-7" />}
-                title={t('formatLandscape')}
-                desc={t('formatLandscapeDesc')}
-              />
-              <FormatCard
-                active={orientation === 'portrait'}
-                onClick={() => setOrientation('portrait')}
-                icon={<Smartphone className="h-7 w-7" />}
-                title={t('formatPortrait')}
-                desc={t('formatPortraitDesc')}
-              />
-            </div>
-
-            <div className="mt-6 flex justify-end gap-2">
-              <Button variant="ghost" onClick={onClose}>
-                {t('cancel')}
-              </Button>
-              <Button
-                onClick={() => {
-                  if (!title.trim()) return;
-                  onCreate(title.trim(), orientation);
-                }}
-                disabled={!title.trim()}
-              >
-                {t('create')}
-              </Button>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+      <div className="mt-7 flex justify-end gap-2">
+        <Button variant="quiet" onClick={onClose}>
+          {t('cancel')}
+        </Button>
+        <Button onClick={submit}>{t('create')}</Button>
+      </div>
+    </Modal>
   );
 }
 
@@ -95,23 +74,33 @@ function FormatCard({
   icon,
   title,
   desc,
+  ratio,
 }: {
   active: boolean;
   onClick: () => void;
   icon: React.ReactNode;
   title: string;
   desc: string;
+  ratio: string;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center gap-1.5 rounded-2xl border p-4 text-center transition-all ${
-        active ? 'border-primary bg-primary/[0.07]' : 'border-line bg-surface'
+      className={`rounded-xl border p-4 text-left transition-colors duration-150 ${
+        active ? 'border-ink bg-paper' : 'border-line bg-card hover:border-ink/25'
       }`}
     >
-      <span className={active ? 'text-primary' : 'text-text-mid'}>{icon}</span>
-      <span className={`text-sm ${active ? 'font-bold text-text-dark' : 'font-semibold text-text-mid'}`}>{title}</span>
-      <span className="text-[10.5px] text-text-mid">{desc}</span>
+      <div className="flex items-center gap-2">
+        <span className={active ? 'text-ink' : 'text-ink-3'}>{icon}</span>
+        <span className={`text-[14px] font-semibold ${active ? 'text-ink' : 'text-ink-2'}`}>{title}</span>
+      </div>
+      <div className="mt-3 flex items-end gap-2">
+        <span
+          className={`block w-full max-w-[64px] rounded border ${active ? 'border-ink/30 bg-ink/[0.06]' : 'border-line bg-paper-2'}`}
+          style={{ aspectRatio: ratio }}
+        />
+      </div>
+      <p className="mt-3 text-[11.5px] leading-snug text-ink-3">{desc}</p>
     </button>
   );
 }

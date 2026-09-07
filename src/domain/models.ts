@@ -1,6 +1,8 @@
 import { v4 as uuid } from 'uuid';
+import { DEFAULT_MUSIC, type MusicSettings } from '../audio/mix';
+import { isPlayableTrack } from '../audio/store';
 import type {
-  DimDirection, PhotoFilter, PhotoFrame, PhotoShape, SlideAmbientEffect,
+  DimDirection, PhotoFilter, PhotoFit, PhotoFrame, PhotoShape, SlideAmbientEffect,
   SlideContentAnimation, SlideFontStyle, SlideFrame, SlideLayout, SlideOverlay,
   SlideTextBg, SlideTextColor, TextShadowLevel, TransitionEffect, VideoOrientation,
 } from './enums';
@@ -68,6 +70,7 @@ export interface Slide {
   durationSeconds: number;
   transition: TransitionEffect;
   photoFilter: PhotoFilter;
+  photoFit: PhotoFit;
   photoScale: number;
   photoOffsetX: number;
   photoOffsetY: number;
@@ -89,11 +92,21 @@ export interface Project {
   title: string;
   slides: Slide[];
   orientation: VideoOrientation;
+  /** `sample:vow` for the built-in track, or a `web_audio://` reference. */
   musicPath: string | null;
   musicName: string | null;
+  musicVolume: number;
+  musicFadeIn: number;
+  musicFadeOut: number;
   createdAt: string;
   updatedAt: string;
 }
+
+export const musicSettings = (p: Project): MusicSettings => ({
+  volume: p.musicVolume ?? DEFAULT_MUSIC.volume,
+  fadeIn: p.musicFadeIn ?? DEFAULT_MUSIC.fadeIn,
+  fadeOut: p.musicFadeOut ?? DEFAULT_MUSIC.fadeOut,
+});
 
 // ---------- Factories ----------
 
@@ -170,6 +183,7 @@ export function newSlide(partial: Partial<Slide> = {}): Slide {
     durationSeconds: 4,
     transition: 'fade',
     photoFilter: 'none',
+    photoFit: 'blur',
     photoScale: 1,
     photoOffsetX: 0,
     photoOffsetY: 0,
@@ -197,6 +211,9 @@ export function newProject(title: string, orientation: VideoOrientation): Projec
     orientation,
     musicPath: null,
     musicName: null,
+    musicVolume: DEFAULT_MUSIC.volume,
+    musicFadeIn: DEFAULT_MUSIC.fadeIn,
+    musicFadeOut: DEFAULT_MUSIC.fadeOut,
     createdAt: now,
     updatedAt: now,
   };
@@ -227,3 +244,24 @@ export function cloneSlideFresh(slide: Slide): Slide {
     stickerLayers: slide.stickerLayers.map((l) => ({ ...l, id: uuid() })),
   };
 }
+
+// ---------- Migration ----------
+
+// Projects saved by earlier versions are missing the newer fields, and an old
+// build stored a mood name ("mood:Romantic") where a real track now lives.
+export function normalizeProject(raw: Project): Project {
+  const slides = (raw.slides ?? []).map((s) => ({ ...newSlide(), ...s }));
+  const playable = isPlayableTrack(raw.musicPath ?? null);
+  return {
+    ...raw,
+    slides: slides.length ? slides : [newSlide()],
+    orientation: raw.orientation === 'portrait' ? 'portrait' : 'landscape',
+    musicPath: playable ? raw.musicPath : null,
+    musicName: playable ? raw.musicName : null,
+    musicVolume: clamp01(raw.musicVolume ?? DEFAULT_MUSIC.volume),
+    musicFadeIn: Math.max(0, raw.musicFadeIn ?? DEFAULT_MUSIC.fadeIn),
+    musicFadeOut: Math.max(0, raw.musicFadeOut ?? DEFAULT_MUSIC.fadeOut),
+  };
+}
+
+const clamp01 = (v: number) => Math.max(0, Math.min(1, v));

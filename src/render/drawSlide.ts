@@ -1,20 +1,12 @@
 import type { PhotoLayer, Slide, StickerLayer, TextLayer } from '../domain/models';
 import { FILTER_CSS, FONT_FAMILY, SHADOW_CSS, TEXT_COLOR_HEX } from '../domain/enums';
 import { getCachedImage } from '../lib/imageStore';
-import { stickerUrl, stickerAspect } from '../domain/stickers';
+import { stickerAspect } from '../domain/stickers';
+import { getStickerImage } from './stickerImages';
+import { warmFontStyle } from '../lib/fonts';
 import { computeAnim } from './anim';
 import { drawAmbient } from './ambient';
 import { pathForShape, roundRect, drawImageCover } from './shapes';
-
-const stickerImgCache = new Map<string, HTMLImageElement>();
-function getSticker(kind: string): HTMLImageElement | null {
-  const cached = stickerImgCache.get(kind);
-  if (cached) return cached.complete && cached.naturalWidth ? cached : null;
-  const img = new Image();
-  img.src = stickerUrl(kind);
-  stickerImgCache.set(kind, img);
-  return null;
-}
 
 export interface DrawOpts {
   localMs: number; // ms since slide became current (animations)
@@ -85,28 +77,40 @@ function drawBackgroundPhoto(
   const iw = img.naturalWidth;
   const ih = img.naturalHeight;
   if (!iw || !ih) return;
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(0, 0, w, h);
-  ctx.clip();
-  ctx.filter = FILTER_CSS[slide.photoFilter] ?? 'none';
 
   let scale = slide.photoScale;
   let panX = slide.photoOffsetX;
   const panY = slide.photoOffsetY;
+  // Ken Burns lives on the background photo, drifting for the slide's length.
   if (slide.transition === 'kenBurns') {
     const p = Math.min(1, localMs / Math.max(1, slide.durationSeconds * 1000));
     scale *= 1 + 0.1 * p;
     panX += (p - 0.5) * 0.04;
   }
 
-  // contain fit then scale
-  const base = Math.min(w / iw, h / ih);
+  const fit = slide.photoFit ?? 'blur';
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, w, h);
+  ctx.clip();
+
+  // A blurred, over-scanned copy fills the bars behind a contained photo.
+  if (fit === 'blur') {
+    const cover = Math.max(w / iw, h / ih) * 1.18;
+    const bw = iw * cover;
+    const bh = ih * cover;
+    ctx.save();
+    ctx.filter = 'blur(28px) brightness(0.7) saturate(1.1)';
+    ctx.drawImage(img, (w - bw) / 2, (h - bh) / 2, bw, bh);
+    ctx.restore();
+  }
+
+  ctx.filter = FILTER_CSS[slide.photoFilter] ?? 'none';
+  const base = fit === 'cover' ? Math.max(w / iw, h / ih) : Math.min(w / iw, h / ih);
   const dw = iw * base * scale;
   const dh = ih * base * scale;
-  const dx = (w - dw) / 2 + panX * w;
-  const dy = (h - dh) / 2 + panY * h;
-  ctx.drawImage(img, dx, dy, dw, dh);
+  ctx.drawImage(img, (w - dw) / 2 + panX * w, (h - dh) / 2 + panY * h, dw, dh);
   ctx.restore();
 }
 
@@ -245,6 +249,9 @@ function resolveColor(preset: string, custom: string | null): string {
 }
 
 function drawTextLayer(ctx: CanvasRenderingContext2D, l: TextLayer, w: number, h: number, localMs: number) {
+  // Cheap after the first call; keeps the live canvas from drawing in a
+  // fallback face while the webfont is still in flight.
+  warmFontStyle(l.fontStyle, l.text);
   const anim = computeAnim(l.contentAnimation, localMs, w, h);
   let text = l.text || '';
   if (anim.textFraction < 1) {
@@ -357,7 +364,7 @@ function drawTextLayer(ctx: CanvasRenderingContext2D, l: TextLayer, w: number, h
 }
 
 function drawSticker(ctx: CanvasRenderingContext2D, l: StickerLayer, w: number, h: number) {
-  const img = getSticker(l.kind);
+  const img = getStickerImage(l.kind);
   const sw = l.widthFraction * w;
   const sh = sw / stickerAspect(l.kind);
   ctx.save();

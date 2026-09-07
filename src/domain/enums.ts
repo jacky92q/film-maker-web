@@ -78,6 +78,12 @@ export const FILTER_CSS: Record<PhotoFilter, string> = {
   dramatic: 'contrast(1.35) saturate(1.2) brightness(0.96)',
 };
 
+// How a background photo sits in the frame. `blur` letterboxes the photo over
+// a blurred, zoomed copy of itself — the flattering option when portrait
+// photos land in a landscape film.
+export type PhotoFit = 'cover' | 'contain' | 'blur';
+export const PHOTO_FITS: PhotoFit[] = ['blur', 'cover', 'contain'];
+
 export type PhotoShape = 'none' | 'rounded' | 'circle' | 'heart' | 'arch';
 export const PHOTO_SHAPES: PhotoShape[] = ['none', 'rounded', 'circle', 'heart', 'arch'];
 

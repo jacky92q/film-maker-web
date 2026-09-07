@@ -1,42 +1,47 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
-  ArrowLeft, Save, Play, Download, Undo2, Redo2, Plus, Image as ImageIcon,
-  Type, Sticker, Music, Layers, Trash2, Copy, Pencil, Check,
+  ArrowLeft, Check, Images, Layers, Music, Play, Plus, Redo2, Sticker as StickerIcon,
+  Type, Undo2, Image as ImageIcon, Download,
 } from 'lucide-react';
 import { useProjects } from '../store/projects';
 import { useEditor, type SelKind } from '../store/editor';
 import { useT } from '../i18n';
 import { useEnumLabel } from '../i18n/enumLabels';
-import { pickImage } from '../lib/imagePick';
+import { pickImage, pickImages } from '../lib/imagePick';
+import { totalDuration } from '../domain/models';
 import { SLIDE_TEMPLATES, type SlideTemplate } from '../domain/enums';
 import EditorCanvas from '../components/EditorCanvas';
-import SlideThumb from '../components/SlideThumb';
+import SlideRail from '../components/SlideRail';
 import StickerPicker from '../components/StickerPicker';
-import {
-  SlidePanel, PhotoPanel, TextPanel, StickerPanel, MusicPanel, EmptyPhoto, EmptyText,
-} from '../components/EditorPanels';
+import MusicPanel from '../components/MusicPanel';
+import { EmptyPhoto, EmptyText, PhotoPanel, SlidePanel, StickerPanel, TextPanel } from '../components/EditorPanels';
+import { Button, IconButton, Modal, Spinner } from '../components/ui';
+import type { StrKey } from '../i18n/strings';
 
 type Section = 'slide' | 'photo' | 'text' | 'sticker' | 'music';
 
-const TEMPLATE_DESC: Record<SlideTemplate, 'templateBlankDesc' | 'templateOpeningDesc' | 'templateMemoryDesc' | 'templateLoveNoteDesc' | 'templateClosingDesc'> = {
-  blank: 'templateBlankDesc', opening: 'templateOpeningDesc', memory: 'templateMemoryDesc',
-  loveNote: 'templateLoveNoteDesc', closing: 'templateClosingDesc',
-};
-
-const TOOLS: { key: Section; icon: typeof Layers; labelKey: 'tabSlide' | 'tabPhoto' | 'tabText' | 'tabSticker' | 'tabMusic' }[] = [
-  { key: 'slide', icon: Layers, labelKey: 'tabSlide' },
-  { key: 'photo', icon: ImageIcon, labelKey: 'tabPhoto' },
-  { key: 'text', icon: Type, labelKey: 'tabText' },
-  { key: 'sticker', icon: Sticker, labelKey: 'tabSticker' },
-  { key: 'music', icon: Music, labelKey: 'tabMusic' },
+const TOOLS: { key: Section; icon: typeof Layers; label: StrKey }[] = [
+  { key: 'slide', icon: Layers, label: 'tabSlide' },
+  { key: 'photo', icon: ImageIcon, label: 'tabPhoto' },
+  { key: 'text', icon: Type, label: 'tabText' },
+  { key: 'sticker', icon: StickerIcon, label: 'tabSticker' },
+  { key: 'music', icon: Music, label: 'tabMusic' },
 ];
+
+const TEMPLATE_DESC: Record<SlideTemplate, StrKey> = {
+  blank: 'templateBlankDesc',
+  opening: 'templateOpeningDesc',
+  memory: 'templateMemoryDesc',
+  loveNote: 'templateLoveNoteDesc',
+  closing: 'templateClosingDesc',
+};
 
 export default function Editor() {
   const { id } = useParams();
   const nav = useNavigate();
-  const { t } = useT();
+  const { t, f, lang } = useT();
   const el = useEnumLabel();
   const getById = useProjects((s) => s.getById);
 
@@ -46,32 +51,35 @@ export default function Editor() {
   const dirty = useEditor((s) => s.dirty);
   const init = useEditor((s) => s.init);
   const save = useEditor((s) => s.save);
-  const setSlideIndex = useEditor((s) => s.setSlideIndex);
-  const addSlideAction = useEditor((s) => s.addSlide);
-  const deleteSlide = useEditor((s) => s.deleteSlide);
-  const duplicateSlide = useEditor((s) => s.duplicateSlide);
+  const setTitle = useEditor((s) => s.setTitle);
+  const addSlide = useEditor((s) => s.addSlide);
   const addSticker = useEditor((s) => s.addSticker);
   const addPhotoLayer = useEditor((s) => s.addPhotoLayer);
+  const addPhotoSlides = useEditor((s) => s.addPhotoSlides);
   const addText = useEditor((s) => s.addText);
   const undo = useEditor((s) => s.undo);
   const redo = useEditor((s) => s.redo);
-  const del = useEditor((s) => s.deleteLayer);
-  const setTitle = useEditor((s) => s.setTitle);
+  const deleteLayer = useEditor((s) => s.deleteLayer);
+  const setSlideIndex = useEditor((s) => s.setSlideIndex);
 
   const [section, setSection] = useState<Section>('slide');
   const [stickerOpen, setStickerOpen] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
-  const [editingTitle, setEditingTitle] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [renaming, setRenaming] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [toast, setToast] = useState('');
 
   useEffect(() => {
-    const p = getById(id!);
+    const p = id ? getById(id) : undefined;
     if (p) init(p);
-    else nav('/projects');
+    else nav('/', { replace: true });
   }, [id, getById, init, nav]);
 
+  // Selecting something on the canvas opens the panel that edits it.
   useEffect(() => {
-    const map: Record<SelKind, Section | null> = { text: 'text', photo: 'photo', sticker: 'sticker', bgphoto: 'slide', none: null };
+    const map: Record<SelKind, Section | null> = {
+      text: 'text', photo: 'photo', sticker: 'sticker', bgphoto: 'slide', none: null,
+    };
     const target = map[selection.kind];
     if (target) setSection(target);
   }, [selection.kind]);
@@ -80,73 +88,118 @@ export default function Editor() {
     function onKey(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+      const meta = e.metaKey || e.ctrlKey;
+      if (meta && e.key.toLowerCase() === 'z') {
         e.preventDefault();
-        e.shiftKey ? redo() : undo();
+        if (e.shiftKey) redo();
+        else undo();
+      } else if (meta && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        save();
       } else if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (selection.kind !== 'none') { e.preventDefault(); del(); }
+        if (useEditor.getState().selection.kind !== 'none') {
+          e.preventDefault();
+          deleteLayer();
+        }
+      } else if (e.key === 'ArrowRight') {
+        setSlideIndex(useEditor.getState().slideIndex + 1);
+      } else if (e.key === 'ArrowLeft') {
+        setSlideIndex(useEditor.getState().slideIndex - 1);
       }
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [undo, redo, del, selection.kind]);
+  }, [undo, redo, deleteLayer, save, setSlideIndex]);
+
+  // Keep the saved copy current if the tab goes away mid-edit.
+  useEffect(() => {
+    const flush = () => save();
+    window.addEventListener('beforeunload', flush);
+    return () => {
+      window.removeEventListener('beforeunload', flush);
+      flush();
+    };
+  }, [save]);
+
+  const duration = useMemo(() => (project ? totalDuration(project) : 0), [project]);
 
   if (!project) {
-    return <div className="grid h-screen place-items-center bg-ed-bg text-ed-text">…</div>;
+    return (
+      <div className="grid h-[100dvh] place-items-center bg-paper text-ink-3">
+        <Spinner size={22} />
+      </div>
+    );
   }
+
   const slide = project.slides[Math.min(slideIndex, project.slides.length - 1)];
 
-  function doSave() { save(); setSaved(true); setTimeout(() => setSaved(false), 1500); }
-  function goPreview() { save(); nav(`/preview/${id}`); }
-  function goExport() { save(); nav(`/export/${id}`); }
-
-  async function handleAdd() {
-    if (section === 'photo') { const p = await pickImage(); if (p) addPhotoLayer(p); }
-    else if (section === 'text') addText(false, t);
-    else if (section === 'sticker') setStickerOpen(true);
+  async function importPhotos() {
+    setImporting(true);
+    const paths = await pickImages();
+    setImporting(false);
+    if (!paths.length) return;
+    addPhotoSlides(paths);
+    setToast(f.photosAdded(lang, paths.length));
+    setTimeout(() => setToast(''), 2600);
   }
 
+  async function addFromPanel() {
+    if (section === 'photo') {
+      const p = await pickImage();
+      if (p) addPhotoLayer(p);
+    } else if (section === 'text') {
+      addText(false, t);
+    } else if (section === 'sticker') {
+      setStickerOpen(true);
+    }
+  }
+
+  const panelTitle = t(TOOLS.find((x) => x.key === section)!.label);
+  const canAdd = section === 'photo' || section === 'text' || section === 'sticker';
+
   return (
-    <div className="flex h-[100dvh] flex-col bg-ed-bg text-ed-text-dark">
-      {/* Top bar */}
-      <header className="relative z-20 flex h-14 shrink-0 items-center gap-2 border-b border-ed-line bg-ed-surface px-3">
-        <button onClick={() => nav('/projects')} className="grid h-9 w-9 place-items-center rounded-lg text-ed-text-dark hover:bg-black/5" title={t('myFilms')}>
-          <ArrowLeft className="h-5 w-5" />
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-paper text-ink">
+      {/* ---- top bar ---- */}
+      <header className="flex h-14 shrink-0 items-center gap-2 border-b border-line bg-card px-3">
+        <IconButton label={t('back')} onClick={() => { save(); nav('/'); }}>
+          <ArrowLeft className="h-[18px] w-[18px]" />
+        </IconButton>
+
+        <button
+          onClick={() => setRenaming(true)}
+          className="min-w-0 max-w-[42vw] truncate text-left font-display text-[17px] leading-none text-ink hover:text-gold-deep"
+          title={t('renameFilm')}
+        >
+          {project.title || t('untitled')}
         </button>
-        {editingTitle ? (
-          <input
-            autoFocus
-            defaultValue={project.title}
-            onBlur={(e) => { setTitle(e.target.value || t('untitledFilm')); setEditingTitle(false); }}
-            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-            className="min-w-0 flex-1 rounded-lg bg-ed-surface-2 px-3 py-1.5 font-serif text-[16px] text-ed-text-dark outline-none ring-1 ring-primary/40"
-          />
-        ) : (
-          <button onClick={() => setEditingTitle(true)} className="flex min-w-0 flex-1 items-center gap-1.5 text-left">
-            <span className="truncate font-serif text-[16px] font-bold">{project.title || t('untitledFilm')}</span>
-            <Pencil className="h-3.5 w-3.5 shrink-0 text-ed-text" />
-          </button>
-        )}
+        <span className="hidden shrink-0 items-center gap-1.5 text-[11px] text-ink-3 sm:flex">
+          <span className="h-3 w-px bg-line" />
+          {f.slidesCount(lang, project.slides.length)} · {f.duration(lang, duration)}
+        </span>
+        <span className="ml-1 hidden items-center gap-1 text-[11px] text-ink-3 sm:flex">
+          {dirty ? <Spinner size={11} /> : <Check className="h-3 w-3 text-gold" />}
+          {dirty ? t('saving') : t('saved')}
+        </span>
+
         <div className="ml-auto flex items-center gap-1">
-          <button onClick={undo} className="grid h-9 w-9 place-items-center rounded-lg text-ed-text hover:bg-black/5" title="Undo"><Undo2 className="h-[18px] w-[18px]" /></button>
-          <button onClick={redo} className="grid h-9 w-9 place-items-center rounded-lg text-ed-text hover:bg-black/5" title="Redo"><Redo2 className="h-[18px] w-[18px]" /></button>
-          <button onClick={doSave} className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-ed-text-dark hover:bg-black/5 sm:flex">
-            {saved ? <Check className="h-4 w-4 text-emerald-400" /> : <Save className={`h-4 w-4 ${dirty ? 'text-primary' : 'text-ed-text'}`} />}
-            {saved ? t('done') : t('save')}
-          </button>
-          <button onClick={goPreview} className="hidden items-center gap-1.5 rounded-lg border border-ed-line px-3 py-2 text-sm font-semibold text-ed-text-dark hover:bg-black/5 sm:flex">
-            <Play className="h-4 w-4" /> {t('preview')}
-          </button>
-          <button onClick={goExport} className="flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-bold text-white hover:brightness-105">
-            <Download className="h-4 w-4" /> {t('export')}
-          </button>
+          <IconButton label={t('undo')} onClick={undo}><Undo2 className="h-[17px] w-[17px]" /></IconButton>
+          <IconButton label={t('redo')} onClick={redo}><Redo2 className="h-[17px] w-[17px]" /></IconButton>
+          <span className="mx-1 h-5 w-px bg-line" />
+          <Button variant="outline" size="sm" onClick={() => { save(); nav(`/film/${id}/preview`); }}>
+            <Play className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{t('preview')}</span>
+          </Button>
+          <Button size="sm" onClick={() => { save(); nav(`/film/${id}/export`); }}>
+            <Download className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{t('export')}</span>
+          </Button>
         </div>
       </header>
 
-      {/* Body */}
+      {/* ---- body ---- */}
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        {/* Left tool rail (desktop) */}
-        <nav className="hidden w-20 shrink-0 flex-col items-center gap-1 border-r border-ed-line bg-ed-surface py-3 lg:flex">
+        {/* tool rail */}
+        <nav className="hidden w-[76px] shrink-0 flex-col items-center gap-0.5 border-r border-line bg-card py-3 lg:flex">
           {TOOLS.map((tool) => {
             const Icon = tool.icon;
             const active = section === tool.key;
@@ -154,107 +207,167 @@ export default function Editor() {
               <button
                 key={tool.key}
                 onClick={() => setSection(tool.key)}
-                className={`flex w-16 flex-col items-center gap-1 rounded-xl py-2.5 text-[10px] font-semibold transition ${active ? 'bg-primary/10 text-primary' : 'text-ed-text hover:bg-black/5 hover:text-ed-text-dark'}`}
+                className={`flex w-[60px] flex-col items-center gap-1.5 rounded-lg py-2.5 transition-colors duration-150 ${
+                  active ? 'bg-ink text-paper' : 'text-ink-3 hover:bg-ink/[0.05] hover:text-ink'
+                }`}
               >
-                <Icon className="h-5 w-5" />
-                {t(tool.labelKey)}
+                <Icon className="h-[18px] w-[18px]" strokeWidth={1.6} />
+                <span className="text-[10px] font-semibold tracking-wide">{t(tool.label)}</span>
               </button>
             );
           })}
+          <span className="my-2 h-px w-8 bg-line" />
+          <button
+            onClick={importPhotos}
+            title={t('addPhotosBulkHint')}
+            className="flex w-[60px] flex-col items-center gap-1.5 rounded-lg py-2.5 text-ink-3 transition-colors hover:bg-ink/[0.05] hover:text-ink"
+          >
+            {importing ? <Spinner size={18} /> : <Images className="h-[18px] w-[18px]" strokeWidth={1.6} />}
+            <span className="text-[10px] font-semibold tracking-wide">{t('addPhotosBulk')}</span>
+          </button>
         </nav>
 
-        {/* Center: stage + timeline */}
+        {/* stage */}
         <div className="flex min-h-0 flex-1 flex-col">
-          <div className="flex min-h-[34vh] flex-1 items-center justify-center stage-grid p-3 sm:p-6">
-            <EditorCanvas orientation={project.orientation} />
+          <div className="stage flex min-h-[32vh] flex-1 items-center justify-center p-4 sm:p-8">
+            <EditorCanvas
+              orientation={project.orientation}
+              emptyHint={
+                <>
+                  <p className="font-display text-[17px] text-white/70">{t('addPhotosBulk')}</p>
+                  <p className="mx-auto mt-1.5 max-w-[240px] text-[12px] leading-relaxed text-white/40">
+                    {t('addPhotosBulkHint')}
+                  </p>
+                  <button
+                    onClick={importPhotos}
+                    className="mt-4 inline-flex items-center gap-2 rounded-lg border border-white/25 px-4 py-2 text-[12.5px] font-semibold text-white/80 transition-colors hover:border-gold hover:text-gold"
+                  >
+                    {importing ? <Spinner size={14} /> : <Images className="h-3.5 w-3.5" />}
+                    {t('addPhotosBulk')}
+                  </button>
+                </>
+              }
+            />
           </div>
-
-          {/* Timeline */}
-          <div className="flex shrink-0 items-center gap-2 border-t border-ed-line bg-ed-surface px-3 py-2.5">
-            <div className="no-scrollbar flex flex-1 items-center gap-2 overflow-x-auto">
-              {project.slides.map((s, i) => (
-                <button
-                  key={s.id}
-                  onClick={() => setSlideIndex(i)}
-                  className={`relative h-16 shrink-0 overflow-hidden rounded-lg border-2 transition ${i === slideIndex ? 'border-primary' : 'border-transparent hover:border-black/15'}`}
-                  style={{ aspectRatio: project.orientation === 'portrait' ? '9/16' : '16/9' }}
-                >
-                  <SlideThumb slide={s} orientation={project.orientation} />
-                  <span className="absolute left-1 top-1 rounded bg-black/60 px-1 text-[9px] text-white">{i + 1}</span>
-                </button>
-              ))}
-              <button onClick={() => setTemplateOpen(true)} className="grid h-16 w-12 shrink-0 place-items-center rounded-lg border-2 border-dashed border-ed-line text-ed-text hover:border-primary hover:text-primary" title={t('addSlide')}>
-                <Plus className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="flex shrink-0 gap-1">
-              <button onClick={() => duplicateSlide(slide.id)} className="grid h-9 w-9 place-items-center rounded-lg bg-ed-surface-2 text-ed-text hover:bg-black/5" title={t('duplicate')}><Copy className="h-4 w-4" /></button>
-              <button onClick={() => deleteSlide(slide.id)} disabled={project.slides.length <= 1} className="grid h-9 w-9 place-items-center rounded-lg bg-ed-surface-2 text-ed-text hover:bg-danger/10 hover:text-danger disabled:opacity-30" title={t('delete')}><Trash2 className="h-4 w-4" /></button>
-            </div>
-          </div>
+          <SlideRail project={project} index={slideIndex} onAdd={() => setTemplateOpen(true)} />
         </div>
 
-        {/* Right panel */}
-        <aside className="flex max-h-[44vh] shrink-0 flex-col border-t border-ed-line bg-ed-surface lg:max-h-none lg:w-[360px] lg:border-l lg:border-t-0">
-          {/* Mobile tool tabs */}
-          <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-ed-line p-2 lg:hidden">
+        {/* inspector */}
+        <aside className="flex max-h-[46vh] shrink-0 flex-col border-t border-line bg-card lg:max-h-none lg:w-[364px] lg:border-l lg:border-t-0">
+          <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-line p-2 lg:hidden">
             {TOOLS.map((tool) => {
               const Icon = tool.icon;
               const active = section === tool.key;
               return (
-                <button key={tool.key} onClick={() => setSection(tool.key)} className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-[12px] font-semibold ${active ? 'bg-primary/10 text-primary' : 'text-ed-text'}`}>
-                  <Icon className="h-4 w-4" /> {t(tool.labelKey)}
+                <button
+                  key={tool.key}
+                  onClick={() => setSection(tool.key)}
+                  className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-[12px] font-semibold transition-colors ${
+                    active ? 'bg-ink text-paper' : 'text-ink-3'
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" /> {t(tool.label)}
                 </button>
               );
             })}
+            <button
+              onClick={importPhotos}
+              className="flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-[12px] font-semibold text-ink-3"
+            >
+              {importing ? <Spinner size={14} /> : <Images className="h-3.5 w-3.5" />} {t('addPhotosBulk')}
+            </button>
           </div>
 
-          {/* Panel header with Add */}
-          <div className="flex items-center justify-between border-b border-ed-line px-4 py-3">
-            <h3 className="font-serif text-base font-bold text-ed-text-dark">{t(TOOLS.find((x) => x.key === section)!.labelKey)}</h3>
-            {(section === 'photo' || section === 'text' || section === 'sticker') && (
-              <button onClick={handleAdd} className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-[12px] font-bold text-white hover:brightness-105">
-                <Plus className="h-3.5 w-3.5" /> {section === 'text' ? t('addTitleBtn') : t('create')}
-              </button>
+          <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3.5">
+            <h3 className="font-display text-[16px] text-ink">{panelTitle}</h3>
+            {canAdd && (
+              <Button size="sm" variant="outline" onClick={addFromPanel}>
+                <Plus className="h-3.5 w-3.5" />
+                {section === 'text' ? t('addTitle') : section === 'photo' ? t('addPhoto') : t('pickSticker')}
+              </Button>
             )}
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto p-4">
+          <div className="thin-scroll min-h-0 flex-1 overflow-y-auto px-5 py-5">
             {section === 'slide' && <SlidePanel slide={slide} />}
-            {section === 'photo' && (selection.kind === 'photo' && slide.photoLayers.find((l) => l.id === selection.id) ? <PhotoPanel layer={slide.photoLayers.find((l) => l.id === selection.id)!} /> : <EmptyPhoto />)}
-            {section === 'text' && (selection.kind === 'text' && slide.textLayers.find((l) => l.id === selection.id) ? <TextPanel layer={slide.textLayers.find((l) => l.id === selection.id)!} /> : <EmptyText />)}
-            {section === 'sticker' && (selection.kind === 'sticker' && slide.stickerLayers.find((l) => l.id === selection.id) ? <StickerPanel layer={slide.stickerLayers.find((l) => l.id === selection.id)!} /> : (
-              <div className="flex flex-col items-center py-10 text-center">
-                <p className="text-sm font-semibold text-ed-text-dark">{t('stickerPickPrompt')}</p>
-                <button onClick={() => setStickerOpen(true)} className="mt-4 flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-[13px] font-bold text-white"><Plus className="h-4 w-4" /> {t('tabSticker')}</button>
-              </div>
-            ))}
+            {section === 'photo' &&
+              (selection.kind === 'photo' && slide.photoLayers.some((l) => l.id === selection.id) ? (
+                <PhotoPanel layer={slide.photoLayers.find((l) => l.id === selection.id)!} />
+              ) : (
+                <EmptyPhoto />
+              ))}
+            {section === 'text' &&
+              (selection.kind === 'text' && slide.textLayers.some((l) => l.id === selection.id) ? (
+                <TextPanel layer={slide.textLayers.find((l) => l.id === selection.id)!} />
+              ) : (
+                <EmptyText />
+              ))}
+            {section === 'sticker' &&
+              (selection.kind === 'sticker' && slide.stickerLayers.some((l) => l.id === selection.id) ? (
+                <StickerPanel layer={slide.stickerLayers.find((l) => l.id === selection.id)!} />
+              ) : (
+                <div className="flex flex-col items-center px-4 py-14 text-center">
+                  <p className="font-display text-[17px] text-ink">{t('pickSticker')}</p>
+                  <p className="mt-2 max-w-[240px] text-[12.5px] leading-relaxed text-ink-3">{t('stickerHint')}</p>
+                  <Button size="sm" variant="outline" className="mt-5" onClick={() => setStickerOpen(true)}>
+                    <Plus className="h-3.5 w-3.5" /> {t('pickSticker')}
+                  </Button>
+                </div>
+              ))}
             {section === 'music' && <MusicPanel />}
+            <p className="mt-8 border-t border-line-soft pt-4 text-[11px] text-ink-3/80">{t('keyboardHint')}</p>
           </div>
         </aside>
       </div>
 
       <StickerPicker open={stickerOpen} onClose={() => setStickerOpen(false)} onPick={addSticker} />
 
-      {/* Template picker */}
+      <Modal open={renaming} onClose={() => setRenaming(false)} title={t('renameFilm')} width={420}>
+        <input
+          autoFocus
+          defaultValue={project.title}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              setTitle((e.target as HTMLInputElement).value.trim() || t('untitled'));
+              save();
+              setRenaming(false);
+            }
+          }}
+          onBlur={(e) => setTitle(e.target.value.trim() || t('untitled'))}
+          className="w-full border-b border-line bg-transparent pb-2 font-display text-[22px] text-ink outline-none focus:border-gold"
+        />
+        <div className="mt-6 flex justify-end">
+          <Button onClick={() => { save(); setRenaming(false); }}>{t('done')}</Button>
+        </div>
+      </Modal>
+
+      <Modal open={templateOpen} onClose={() => setTemplateOpen(false)} title={t('chooseTemplate')} width={420}>
+        <div className="space-y-2">
+          {SLIDE_TEMPLATES.map((tpl) => (
+            <button
+              key={tpl}
+              onClick={() => {
+                addSlide(tpl, t);
+                setTemplateOpen(false);
+              }}
+              className="flex w-full items-baseline gap-3 rounded-xl border border-line bg-card p-3.5 text-left transition-colors hover:border-ink/25 hover:bg-paper"
+            >
+              <span className="font-display text-[16px] text-ink">{el('template', tpl)}</span>
+              <span className="text-[11.5px] text-ink-3">{t(TEMPLATE_DESC[tpl])}</span>
+            </button>
+          ))}
+        </div>
+      </Modal>
+
       <AnimatePresence>
-        {templateOpen && (
-          <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setTemplateOpen(false)}>
-            <motion.div className="w-full max-w-md rounded-3xl bg-surface p-5 shadow-elevated" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} onClick={(e) => e.stopPropagation()}>
-              <h3 className="font-serif text-lg font-bold text-text-dark">{t('chooseTemplate')}</h3>
-              <p className="mb-4 text-[13px] text-text-mid">{t('templateSub')}</p>
-              <div className="grid grid-cols-1 gap-2">
-                {SLIDE_TEMPLATES.map((tpl) => (
-                  <button key={tpl} onClick={() => { addSlideAction(tpl, t); setTemplateOpen(false); }} className="flex items-center gap-3 rounded-xl bg-surface-2 p-3 text-left hover:bg-black/5">
-                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary"><Plus className="h-4 w-4" /></span>
-                    <span>
-                      <span className="block text-sm font-bold text-text-dark">{el('template', tpl)}</span>
-                      <span className="block text-[11px] text-text-mid">{t(TEMPLATE_DESC[tpl])}</span>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </motion.div>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            className="pointer-events-none fixed left-1/2 top-[72px] z-50 -translate-x-1/2 rounded-full bg-ink px-4 py-2 text-[12.5px] font-medium text-paper shadow-lift"
+          >
+            {toast}
           </motion.div>
         )}
       </AnimatePresence>
