@@ -1,52 +1,53 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
 import { STICKERS, stickerUrl } from '../domain/stickers';
 import { STICKER_CATEGORIES, type StickerCategory } from '../domain/enums';
 import { useT } from '../i18n';
-
-const CAT_LABEL: Record<StickerCategory, 'stickerCatCharms' | 'stickerCatHearts' | 'stickerCatKeepsakes' | 'stickerCatWedding'> = {
-  charms: 'stickerCatCharms', hearts: 'stickerCatHearts', keepsakes: 'stickerCatKeepsakes', wedding: 'stickerCatWedding',
-};
+import { useEnumLabel } from '../i18n/enumLabels';
+import { Modal } from './ui';
 
 export default function StickerPicker({
-  open, onClose, onPick,
-}: { open: boolean; onClose: () => void; onPick: (kind: string) => void }) {
+  open,
+  onClose,
+  onPick,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onPick: (kind: string) => void;
+}) {
   const { t } = useT();
-  const [cat, setCat] = useState<StickerCategory>('charms');
-  const list = STICKERS.filter((s) => s.category === cat);
+  const el = useEnumLabel();
+  const [category, setCategory] = useState<StickerCategory>('wedding');
+  const list = STICKERS.filter((s) => s.category === category);
 
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 backdrop-blur-sm sm:items-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
-          <motion.div
-            className="w-full max-w-xl rounded-t-3xl bg-surface p-4 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-elevated sm:rounded-3xl"
-            initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }}
-            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            onClick={(e) => e.stopPropagation()}
+    <Modal open={open} onClose={onClose} title={t('pickSticker')} width={560}>
+      <div className="mb-4 flex flex-wrap gap-1.5">
+        {STICKER_CATEGORIES.map((c) => (
+          <button
+            key={c}
+            onClick={() => setCategory(c)}
+            className={`rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors duration-150 ${
+              category === c ? 'border-ink bg-ink text-paper' : 'border-line bg-card text-ink-2 hover:border-ink/25'
+            }`}
           >
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="font-serif text-lg font-bold text-text-dark">{t('stickerPickPrompt')}</h3>
-              <button onClick={onClose} className="grid h-8 w-8 place-items-center rounded-full text-text-mid hover:bg-surface-2"><X className="h-5 w-5" /></button>
-            </div>
-            <div className="mb-3 flex gap-2">
-              {STICKER_CATEGORIES.map((c) => (
-                <button key={c} onClick={() => setCat(c)} className={`rounded-full px-3 py-1.5 text-[12px] font-semibold transition ${cat === c ? 'bg-primary text-white shadow-sm' : 'bg-surface-2 text-text-mid hover:bg-black/5'}`}>
-                  {t(CAT_LABEL[c])}
-                </button>
-              ))}
-            </div>
-            <div className="grid max-h-[50vh] grid-cols-5 gap-2 overflow-y-auto sm:grid-cols-6">
-              {list.map((s) => (
-                <button key={s.kind} onClick={() => { onPick(s.kind); onClose(); }} className="grid aspect-square place-items-center rounded-xl bg-surface-2 p-2 transition hover:scale-105 hover:bg-primary/10">
-                  <img src={stickerUrl(s.kind)} alt={s.kind} className="max-h-full max-w-full object-contain" loading="lazy" />
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+            {el('stickerCat', c)}
+          </button>
+        ))}
+      </div>
+      <div className="thin-scroll grid max-h-[52vh] grid-cols-5 gap-2 overflow-y-auto pr-1 sm:grid-cols-7">
+        {list.map((s) => (
+          <button
+            key={s.kind}
+            onClick={() => {
+              onPick(s.kind);
+              onClose();
+            }}
+            className="grid aspect-square place-items-center rounded-lg border border-transparent bg-paper p-2 transition-colors duration-150 hover:border-line hover:bg-gold-wash"
+          >
+            <img src={stickerUrl(s.kind)} alt={s.kind} loading="lazy" className="max-h-full max-w-full object-contain" />
+          </button>
+        ))}
+      </div>
+    </Modal>
   );
 }

@@ -1,65 +1,74 @@
-# Film Maker Web
+# Film Maker
 
-A beautiful, installable web reimagining of the **Film Maker** Flutter app — turn
-your photos into cinematic memory films, right in the browser.
+웨딩 식전 영상을 직접 만드는 브라우저 도구.
+사진을 넣고, 글자와 음악을 얹고, 영상 파일까지 브라우저 안에서 바로 뽑습니다.
 
-🔗 **Live:** https://jacky92q.github.io/film-maker-web/
+🔗 **https://jacky92q.github.io/film-maker-web/**
 
-Built with **React + TypeScript + Vite**, fully client‑side. It is a faithful,
-animated port of the original Flutter editor (slides, transitions, text, photos,
-stickers, ambient effects, filters, frames) plus real in‑browser video export.
+React + TypeScript + Vite로 만든 완전 클라이언트 사이드 앱입니다. 서버가 없고,
+사진·음악·프로젝트는 모두 사용자의 기기(localStorage / IndexedDB)에만 저장됩니다.
 
-## Features
+## 무엇을 할 수 있나
 
-- **Project library** — create, open, duplicate and delete films; everything is
-  saved locally (projects in `localStorage`, photos in IndexedDB).
-- **Slide editor**
-  - Background photo (zoom/pan), solid colour, dim gradients, overlays (vignette,
-    grain), decorative frames, animated ambient effects (petals, snow, sparkles,
-    gold dust, confetti, bokeh, stars, ribbons, light rays…).
-  - **Text layers** — 6 font families with Korean fallbacks, 13 colour presets +
-    custom colour, outline, shadow, letter‑spacing, background pill/box, rotation,
-    11 content animations (typewriter, shimmer, handwriting, drift‑zoom…).
-  - **Photo layers** — shapes (rounded, circle, heart, arch), frames (white, gold,
-    polaroid), filters, crop zoom/pan, per‑layer animations.
-  - **Stickers** — 68 hand‑cut decorative stickers across 4 categories.
-  - **Transitions** — fade, slide, zoom, Ken Burns, blur dissolve, wipes, pushes,
-    circle reveal.
-  - Direct manipulation on the canvas: drag to move, pinch to scale/rotate.
-  - Undo/redo, keyboard shortcuts, slide templates.
-- **Preview** — full‑screen real‑time playback with scrubber and slide navigation.
-- **Export** — renders the film on a canvas and encodes it with `MediaRecorder`
-  (MP4 where supported, otherwise WebM) at 720p / 1080p / 4K. Also exports each
-  slide as a PNG.
-- **Bilingual** — English & 한국어, auto‑detected and persisted.
-- **PWA** — installable on mobile Chrome / desktop, offline‑capable via a service
-  worker.
+- **슬라이드 편집** — 배경 사진(꽉 채우기 / 사진 전체 / 흐린 배경), 색 배경, 그라데이션
+  어둡기, 비네트·필름 그레인, 장식 테두리, 꽃잎·눈·반짝임 같은 분위기 효과.
+- **레이어** — 글자(6종 글꼴 + 한글 대체 글꼴, 색·외곽선·그림자·자간·배경 박스, 11가지
+  등장 애니메이션), 사진(모양·액자·필터·크롭), 스티커 68종.
+  캔버스에서 끌어 옮기고, 모서리를 잡아 크기를 바꾸고, 위쪽 손잡이로 돌립니다.
+  가운데에 가까워지면 가이드가 잡아줍니다.
+- **전환** — 페이드, 슬라이드, 줌, 켄 번스, 블러, 와이프, 밀기, 원형 열기.
+- **음악** — 기본 제공 곡 *Vow*(이 저장소 안에서 Web Audio로 합성한 곡, 저작권 부담 없음)
+  또는 내 MP3·M4A·WAV 파일. **곡이 영상보다 짧으면 자동으로 처음부터 다시 재생**되고,
+  음량·페이드 인·페이드 아웃을 조절할 수 있습니다.
+- **미리보기** — 실제 렌더러로 재생. 슬라이드 구간이 표시되는 스크럽 바, 챕터 이동, 음소거.
+- **내보내기** — 720p / 1080p / 4K.
+  - WebCodecs가 있는 브라우저(크롬·엣지)에서는 한 프레임씩 인코딩합니다. 실시간 녹화가
+    아니라 보통 영상 길이보다 빨리 끝나고, 길이·탐색이 정확한 파일이 나옵니다.
+  - **H.264 + AAC MP4**를 우선 시도하고, 안 되면 **VP9 + Opus WebM**, 그마저 안 되면
+    MediaRecorder 실시간 녹화로 단계적으로 내려갑니다. 어느 경로든 음악이 함께 들어갑니다.
+  - 슬라이드를 PNG로 저장하는 기능도 있습니다.
+- **한국어 / English** — 브라우저 언어로 자동 선택, 헤더에서 전환.
+- **PWA** — 설치 가능하고 오프라인에서도 열립니다.
 
-## Tech
+## 구조
 
-React 18 · TypeScript · Vite · Tailwind CSS · Framer Motion · Zustand ·
-vite-plugin-pwa · HTML Canvas 2D for rendering & export.
+```
+src/
+  audio/      샘플 곡 합성, IndexedDB 트랙 저장, 반복·페이드 믹스, 미리듣기 재생
+  render/     FilmRenderer(미리보기와 내보내기가 공유하는 프레임 렌더러),
+              drawSlide, 전환, 애니메이션, 분위기 효과, exporter
+  screens/    Library, Editor, Preview, Export
+  components/ 캔버스, 슬라이드 레일, 패널, 공통 UI
+  store/      zustand — 프로젝트 목록, 편집 상태(자동 저장 + 실행 취소)
+  domain/     슬라이드·레이어 모델과 열거형
+  i18n/       한국어 / 영어 문자열
+```
 
-## Development
+미리보기와 내보내기는 같은 `FilmRenderer`를 씁니다. 화면에서 본 것이 그대로 파일로
+나오게 하기 위해서입니다. 내보내기 전에 사진·스티커·글꼴을 모두 불러온 뒤 시작하므로,
+글꼴이 늦게 도착해 대체 글꼴로 렌더되는 일이 없습니다.
+
+## 개발
 
 ```bash
 npm install
-npm run dev      # start dev server
-npm run build    # type-check + production build to dist/
-npm run preview  # preview the production build
+npm run dev      # 개발 서버
+npm run build    # 타입 검사 + dist/ 빌드
+npm run preview  # 빌드 결과 미리보기
 ```
 
-## Deployment
+## 배포
 
-Pushes to `main` (and the active development branch) trigger
-`.github/workflows/deploy.yml`, which builds the site and publishes `dist/` to
-GitHub Pages. The Vite `base` is `/film-maker-web/`.
+`main`(그리고 작업 브랜치)에 푸시하면 `.github/workflows/deploy.yml`이 빌드해서 GitHub
+Pages로 올립니다. Vite `base`는 `/film-maker-web/`입니다.
 
-> Enable **Settings → Pages → Build and deployment → Source: GitHub Actions** on
-> the repository once, so the workflow can deploy.
+> 저장소 설정에서 **Settings → Pages → Source: GitHub Actions**를 한 번 켜 두어야 합니다.
 
-## Notes
+## 알아둘 점
 
-Authentication is a local‑only mock (there is no backend on GitHub Pages); use
-**Continue as guest** or any email to enter. The original app's assets (fonts and
-stickers) were ported from the `film-maker` repository.
+- 로그인이 없습니다. 백엔드가 없는 앱에서 아무 비밀번호나 통과시키는 로그인 화면은
+  실제로 아무것도 지켜주지 않아 걷어냈습니다. 열면 바로 쓸 수 있습니다.
+- 데이터는 브라우저에만 있습니다. 시크릿 창이나 다른 기기에서는 보이지 않고, 브라우저
+  저장소를 지우면 함께 지워집니다.
+- 사파리에는 아직 WebCodecs 인코딩이 없어 실시간 녹화 경로로 내려갑니다. 크롬이나
+  엣지에서 훨씬 빠르고, MP4로 나옵니다.

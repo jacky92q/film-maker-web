@@ -22,6 +22,9 @@ const MAPS: Record<string, Record<string, Pair>> = {
     none: ['None', '없음'], rounded: ['Rounded', '둥글게'], circle: ['Circle', '원형'],
     heart: ['Heart', '하트'], arch: ['Arch', '아치'],
   },
+  fit: {
+    blur: ['Blurred edges', '흐린 배경'], cover: ['Fill', '꽉 채우기'], contain: ['Whole photo', '사진 전체'],
+  },
   photoFrame: {
     none: ['None', '없음'], white: ['White', '화이트'], gold: ['Gold', '골드'], polaroid: ['Polaroid', '폴라로이드'],
   },
@@ -48,6 +51,10 @@ const MAPS: Record<string, Record<string, Pair>> = {
     snowFall: ['Snow', '눈송이'], heartFloat: ['Hearts', '하트'], goldDust: ['Gold Dust', '골드 더스트'],
     confettiFall: ['Confetti', '컨페티'], bokeFloat: ['Bokeh', '보케'], starTwinkle: ['Stars', '별'],
     ribbonStream: ['Ribbons', '리본'], lightRays: ['Light Rays', '빛 줄기'],
+  },
+  stickerCat: {
+    charms: ['Charms', '소품'], hearts: ['Hearts', '하트'],
+    keepsakes: ['Keepsakes', '추억'], wedding: ['Wedding', '웨딩'],
   },
   template: {
     blank: ['Blank', '빈 슬라이드'], opening: ['Opening', '오프닝'], memory: ['Memory', '추억'],
