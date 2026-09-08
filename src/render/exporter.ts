@@ -24,6 +24,8 @@ export interface ExportResult {
   hasAudio: boolean;
   /** True when the film was encoded frame by frame rather than captured live. */
   frameAccurate: boolean;
+  /** A still to show before playback, since frame zero is a fade from black. */
+  poster?: string;
 }
 
 export class ExportCancelled extends Error {
@@ -43,6 +45,24 @@ const AUDIO_FRAME = 1024;
 // render loop waits for the queue to come down before drawing the next frame.
 const MAX_VIDEO_QUEUE = 3;
 const MAX_AUDIO_QUEUE = 16;
+
+// Frame zero of every film is black, which makes a poor thumbnail. Take the
+// still from a little way in instead.
+function makePoster(renderer: FilmRenderer, width: number, height: number): string | undefined {
+  try {
+    const w = 720;
+    const h = Math.max(2, Math.round((w * height) / width));
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return undefined;
+    renderer.renderTo(ctx, Math.min(renderer.total * 0.12 + 0.8, renderer.total), w, h, false);
+    return canvas.toDataURL('image/jpeg', 0.82);
+  } catch {
+    return undefined;
+  }
+}
 
 const hasWebCodecs = () =>
   typeof window !== 'undefined' && 'VideoEncoder' in window && 'VideoFrame' in window;
@@ -277,7 +297,14 @@ async function encodeFilm(
 
   const blob = container.finalize();
   opts.onProgress?.(1, 'finishing');
-  return { blob, ext: container.ext, mime: container.mime, hasAudio: !!audio, frameAccurate: true };
+  return {
+    blob,
+    ext: container.ext,
+    mime: container.mime,
+    hasAudio: !!audio,
+    frameAccurate: true,
+    poster: makePoster(renderer, width, height),
+  };
 }
 
 /* ------------------------------------------------------------------ *
@@ -347,6 +374,7 @@ async function captureFilm(
     mime,
     hasAudio: !!bed,
     frameAccurate: false,
+    poster: makePoster(renderer, opts.width, opts.height),
   };
 }
 

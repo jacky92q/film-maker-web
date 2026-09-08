@@ -213,12 +213,12 @@ export default function Export() {
               </p>
             )}
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button className="flex-1" onClick={run}>
-                <Film className="h-4 w-4" /> {t('exportStart')}
+            <div className="mt-8 space-y-2.5">
+              <Button size="lg" className="w-full" onClick={run}>
+                <Film className="h-[18px] w-[18px]" /> {t('exportStart')}
               </Button>
-              <Button variant="outline" className="flex-1" onClick={exportStills} disabled={stillsBusy}>
-                {stillsBusy ? <Spinner size={15} /> : <Images className="h-4 w-4" />} {t('exportStills')}
+              <Button size="lg" variant="outline" className="w-full" onClick={exportStills} disabled={stillsBusy}>
+                {stillsBusy ? <Spinner size={17} /> : <Images className="h-[18px] w-[18px]" />} {t('exportStills')}
               </Button>
             </div>
 
@@ -286,6 +286,7 @@ export default function Export() {
             {resultUrl && (
               <video
                 src={resultUrl}
+                poster={result.poster}
                 controls
                 playsInline
                 className="mt-7 w-full max-w-xl rounded-[3px] border border-line bg-black shadow-card"
@@ -293,11 +294,15 @@ export default function Export() {
               />
             )}
 
-            <div className="mt-7 flex flex-wrap justify-center gap-2">
-              <Button onClick={() => saveFile(result.blob, filename(project.title, result.ext), project.title)}>
-                <Download className="h-4 w-4" /> {t('exportSave')}
+            <div className="mt-7 flex w-full max-w-sm flex-col gap-2.5 sm:max-w-xl sm:flex-row">
+              <Button
+                size="lg"
+                className="flex-1"
+                onClick={() => saveFile(result.blob, filename(project.title, result.ext), project.title)}
+              >
+                <Download className="h-[18px] w-[18px]" /> {t('exportSave')}
               </Button>
-              <Button variant="outline" onClick={() => setStatus('idle')}>
+              <Button size="lg" variant="outline" className="flex-1" onClick={() => setStatus('idle')}>
                 {t('exportAgain')}
               </Button>
             </div>
