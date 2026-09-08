@@ -17,8 +17,13 @@ export function Button({
   size = 'md',
   className = '',
   ...rest
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: 'sm' | 'md' }) {
-  const pad = size === 'sm' ? 'h-10 px-3.5 text-[13px]' : 'h-11 px-5 text-[14px]';
+}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: 'sm' | 'md' | 'lg' }) {
+  const pad = {
+    sm: 'h-10 px-3.5 text-[13px]',
+    md: 'h-11 px-5 text-[14px]',
+    // For the one action a screen is really about.
+    lg: 'h-[54px] px-6 text-[15.5px]',
+  }[size];
   return (
     <button
       className={`inline-flex select-none items-center justify-center gap-2 rounded-lg font-semibold transition-colors duration-150 disabled:pointer-events-none disabled:opacity-40 ${pad} ${VARIANTS[variant]} ${className}`}
