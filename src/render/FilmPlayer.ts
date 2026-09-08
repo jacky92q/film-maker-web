@@ -45,7 +45,8 @@ export class FilmPlayer {
     await this.renderer.preload();
     this.hasMusic = await this.music.load(project.musicPath);
     if (this.disposed) return;
-    this.renderAt(this.elapsed);
+    // Show a real frame rather than the film's opening black.
+    this.renderAt(this.elapsed, false);
     this.cb.onReady?.();
   }
 
@@ -53,8 +54,8 @@ export class FilmPlayer {
     return this.renderer.slideIndexAt(t);
   }
 
-  renderAt(t: number) {
-    this.renderer.renderTo(this.ctx, t, this.canvas.width, this.canvas.height);
+  renderAt(t: number, dip = true) {
+    this.renderer.renderTo(this.ctx, t, this.canvas.width, this.canvas.height, dip);
     this.cb.onTick?.(t, this.total, this.renderer.slideIndexAt(t));
   }
 

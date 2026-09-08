@@ -50,29 +50,30 @@ export function SlidePanel({ slide }: { slide: Slide }) {
       {tab === 0 && (
         <>
           <Section title={t('secBackground')}>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap gap-2">
               <ToolButton onClick={async () => { const p = await pickImage(); if (p) setBg(p); }}>
-                <ImagePlus className="h-3.5 w-3.5" />
+                <ImagePlus className="h-4 w-4" />
                 {slide.imagePath ? t('replacePhoto') : t('backgroundPhoto')}
               </ToolButton>
               {slide.imagePath && (
                 <ToolButton danger onClick={removeBg}>
-                  <Trash2 className="h-3.5 w-3.5" /> {t('removePhoto')}
+                  <Trash2 className="h-4 w-4" /> {t('removePhoto')}
                 </ToolButton>
               )}
-              <label
-                className="ml-auto flex items-center gap-2 text-[11.5px] text-ink-3"
-                title={t('secBackground')}
-              >
-                <input
-                  type="color"
-                  value={slide.backgroundColor}
-                  onChange={(e) => patch({ backgroundColor: e.target.value }, false)}
-                  onBlur={() => patch({}, true)}
-                  className="h-7 w-7 rounded-full ring-1 ring-inset ring-line"
-                />
-              </label>
             </div>
+            <label className="mt-2 flex h-10 cursor-pointer items-center gap-2.5 rounded-lg border border-line bg-card px-3 text-[12.5px] font-semibold text-ink-2 transition-colors hover:border-ink/25">
+              <input
+                type="color"
+                value={slide.backgroundColor}
+                onChange={(e) => patch({ backgroundColor: e.target.value }, false)}
+                onBlur={() => patch({}, true)}
+                className="h-6 w-6 rounded-full ring-1 ring-inset ring-black/15"
+              />
+              {t('secBackgroundColour')}
+              <span className="ml-auto text-[11.5px] uppercase tracking-wide tabular-nums text-ink-3">
+                {slide.backgroundColor}
+              </span>
+            </label>
           </Section>
 
           {slide.imagePath && (
@@ -192,11 +193,11 @@ export function PhotoPanel({ layer }: { layer: PhotoLayer }) {
       {tab === 0 && (
         <>
           <div className="mb-6 flex flex-wrap gap-2">
-            <ToolButton onClick={front} title={t('bringForward')}><ArrowUpToLine className="h-3.5 w-3.5" /></ToolButton>
-            <ToolButton onClick={back} title={t('sendBackward')}><ArrowDownToLine className="h-3.5 w-3.5" /></ToolButton>
-            <ToolButton active={cropMode} onClick={() => setCrop(!cropMode)}><Crop className="h-3.5 w-3.5" /> {t('crop')}</ToolButton>
+            <ToolButton onClick={front} title={t('bringForward')}><ArrowUpToLine className="h-4 w-4" /> {t('bringForward')}</ToolButton>
+            <ToolButton onClick={back} title={t('sendBackward')}><ArrowDownToLine className="h-4 w-4" /> {t('sendBackward')}</ToolButton>
+            <ToolButton active={cropMode} onClick={() => setCrop(!cropMode)}><Crop className="h-4 w-4" /> {t('crop')}</ToolButton>
             <ToolButton onClick={async () => { const p = await pickImage(); if (p) patch(layer.id, { imagePath: p }); }}>
-              <ImagePlus className="h-3.5 w-3.5" /> {t('changePhoto')}
+              <ImagePlus className="h-4 w-4" /> {t('changePhoto')}
             </ToolButton>
           </div>
 
@@ -237,13 +238,13 @@ export function PhotoPanel({ layer }: { layer: PhotoLayer }) {
                   onChange={(v) => patch(layer.id, { rotation: v }, false)} onCommit={() => patch(layer.id, {}, true)} />
               </Section>
               <div className="mb-6 flex gap-2">
-                <ToolButton onClick={() => patch(layer.id, { x: 0.5 })}><AlignCenterVertical className="h-3.5 w-3.5" /> {t('centreH')}</ToolButton>
-                <ToolButton onClick={() => patch(layer.id, { y: 0.5 })}><AlignCenterHorizontal className="h-3.5 w-3.5" /> {t('centreV')}</ToolButton>
+                <ToolButton onClick={() => patch(layer.id, { x: 0.5 })}><AlignCenterVertical className="h-4 w-4" /> {t('centreH')}</ToolButton>
+                <ToolButton onClick={() => patch(layer.id, { y: 0.5 })}><AlignCenterHorizontal className="h-4 w-4" /> {t('centreV')}</ToolButton>
               </div>
             </>
           )}
 
-          <ToolButton danger onClick={del}><Trash2 className="h-3.5 w-3.5" /> {t('deleteLayer')}</ToolButton>
+          <ToolButton danger onClick={del}><Trash2 className="h-4 w-4" /> {t('deleteLayer')}</ToolButton>
         </>
       )}
 
@@ -303,12 +304,12 @@ export function TextPanel({ layer }: { layer: TextLayer }) {
             />
           </Section>
           <div className="mb-6 flex gap-2">
-            <ToolButton onClick={front} title={t('bringForward')}><ArrowUpToLine className="h-3.5 w-3.5" /></ToolButton>
-            <ToolButton onClick={back} title={t('sendBackward')}><ArrowDownToLine className="h-3.5 w-3.5" /></ToolButton>
-            <ToolButton onClick={() => patch(layer.id, { x: 0.5 })}><AlignCenterVertical className="h-3.5 w-3.5" /> {t('centreH')}</ToolButton>
-            <ToolButton onClick={() => patch(layer.id, { y: 0.5 })}><AlignCenterHorizontal className="h-3.5 w-3.5" /> {t('centreV')}</ToolButton>
+            <ToolButton onClick={front} title={t('bringForward')}><ArrowUpToLine className="h-4 w-4" /> {t('bringForward')}</ToolButton>
+            <ToolButton onClick={back} title={t('sendBackward')}><ArrowDownToLine className="h-4 w-4" /> {t('sendBackward')}</ToolButton>
+            <ToolButton onClick={() => patch(layer.id, { x: 0.5 })}><AlignCenterVertical className="h-4 w-4" /> {t('centreH')}</ToolButton>
+            <ToolButton onClick={() => patch(layer.id, { y: 0.5 })}><AlignCenterHorizontal className="h-4 w-4" /> {t('centreV')}</ToolButton>
           </div>
-          <ToolButton danger onClick={del}><Trash2 className="h-3.5 w-3.5" /> {t('deleteLayer')}</ToolButton>
+          <ToolButton danger onClick={del}><Trash2 className="h-4 w-4" /> {t('deleteLayer')}</ToolButton>
         </>
       )}
 
@@ -394,10 +395,10 @@ export function StickerPanel({ layer }: { layer: StickerLayer }) {
           onChange={(v) => patch(layer.id, { opacity: v }, false)} onCommit={() => patch(layer.id, {}, true)} />
       </Section>
       <div className="mb-6 flex gap-2">
-        <ToolButton onClick={front} title={t('bringForward')}><ArrowUpToLine className="h-3.5 w-3.5" /></ToolButton>
-        <ToolButton onClick={back} title={t('sendBackward')}><ArrowDownToLine className="h-3.5 w-3.5" /></ToolButton>
+        <ToolButton onClick={front} title={t('bringForward')}><ArrowUpToLine className="h-4 w-4" /> {t('bringForward')}</ToolButton>
+        <ToolButton onClick={back} title={t('sendBackward')}><ArrowDownToLine className="h-4 w-4" /> {t('sendBackward')}</ToolButton>
       </div>
-      <ToolButton danger onClick={del}><Trash2 className="h-3.5 w-3.5" /> {t('deleteLayer')}</ToolButton>
+      <ToolButton danger onClick={del}><Trash2 className="h-4 w-4" /> {t('deleteLayer')}</ToolButton>
     </div>
   );
 }
@@ -413,7 +414,7 @@ export function EmptyPhoto() {
       hint={t('noPhotoHint')}
       action={
         <ToolButton onClick={async () => { const p = await pickImage(); if (p) add(p); }}>
-          <Plus className="h-3.5 w-3.5" /> {t('addPhoto')}
+          <Plus className="h-4 w-4" /> {t('addPhoto')}
         </ToolButton>
       }
     />
@@ -429,8 +430,8 @@ export function EmptyText() {
       hint={t('noTextHint')}
       action={
         <>
-          <ToolButton onClick={() => add(false, t)}><Plus className="h-3.5 w-3.5" /> {t('addTitle')}</ToolButton>
-          <ToolButton onClick={() => add(true, t)}><Plus className="h-3.5 w-3.5" /> {t('addCaption')}</ToolButton>
+          <ToolButton onClick={() => add(false, t)}><Plus className="h-4 w-4" /> {t('addTitle')}</ToolButton>
+          <ToolButton onClick={() => add(true, t)}><Plus className="h-4 w-4" /> {t('addCaption')}</ToolButton>
         </>
       }
     />

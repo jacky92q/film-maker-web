@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -63,6 +63,7 @@ export default function Editor() {
   const setSlideIndex = useEditor((s) => s.setSlideIndex);
 
   const [section, setSection] = useState<Section>('slide');
+  const tabStrip = useRef<HTMLDivElement>(null);
   const [stickerOpen, setStickerOpen] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
@@ -121,6 +122,13 @@ export default function Editor() {
     };
   }, [save]);
 
+  // Centre the active tab so the strip's fade never sits over it.
+  useEffect(() => {
+    tabStrip.current
+      ?.querySelector<HTMLElement>(`[data-tab="${section}"]`)
+      ?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+  }, [section]);
+
   const duration = useMemo(() => (project ? totalDuration(project) : 0), [project]);
 
   if (!project) {
@@ -167,8 +175,9 @@ export default function Editor() {
 
         <button
           onClick={() => setRenaming(true)}
-          className="min-w-0 max-w-[42vw] truncate text-left font-display text-[17px] leading-none text-ink hover:text-gold-deep"
+          className="min-w-0 max-w-[30vw] truncate text-left font-display text-[17px] leading-none text-ink hover:text-gold-deep sm:max-w-[42vw]"
           title={t('renameFilm')}
+          aria-label={t('renameFilm')}
         >
           {project.title || t('untitled')}
         </button>
@@ -176,21 +185,34 @@ export default function Editor() {
           <span className="h-3 w-px bg-line" />
           {f.slidesCount(lang, project.slides.length)} · {f.duration(lang, duration)}
         </span>
-        <span className="ml-1 hidden items-center gap-1 text-[11px] text-ink-3 sm:flex">
-          {dirty ? <Spinner size={11} /> : <Check className="h-3 w-3 text-gold" />}
-          {dirty ? t('saving') : t('saved')}
+        <span className="ml-1 flex shrink-0 items-center gap-1 text-[11px] text-ink-3">
+          {dirty ? <Spinner size={11} /> : <Check className="h-3.5 w-3.5 text-gold" />}
+          <span className="hidden sm:inline">{dirty ? t('saving') : t('saved')}</span>
         </span>
 
         <div className="ml-auto flex items-center gap-1">
-          <IconButton label={t('undo')} onClick={undo}><Undo2 className="h-[17px] w-[17px]" /></IconButton>
-          <IconButton label={t('redo')} onClick={redo}><Redo2 className="h-[17px] w-[17px]" /></IconButton>
-          <span className="mx-1 h-5 w-px bg-line" />
-          <Button variant="outline" size="sm" onClick={() => { save(); nav(`/film/${id}/preview`); }}>
-            <Play className="h-3.5 w-3.5" />
+          <IconButton label={t('undo')} onClick={undo} className="hidden xs:grid"><Undo2 className="h-[18px] w-[18px]" /></IconButton>
+          <IconButton label={t('redo')} onClick={redo} className="hidden xs:grid"><Redo2 className="h-[18px] w-[18px]" /></IconButton>
+          <span className="mx-1 hidden h-5 w-px bg-line xs:block" />
+          <Button
+            variant="outline"
+            size="sm"
+            aria-label={t('preview')}
+            title={t('preview')}
+            className="w-10 px-0 sm:w-auto sm:px-4"
+            onClick={() => { save(); nav(`/film/${id}/preview`); }}
+          >
+            <Play className="h-4 w-4" />
             <span className="hidden sm:inline">{t('preview')}</span>
           </Button>
-          <Button size="sm" onClick={() => { save(); nav(`/film/${id}/export`); }}>
-            <Download className="h-3.5 w-3.5" />
+          <Button
+            size="sm"
+            aria-label={t('export')}
+            title={t('export')}
+            className="w-10 px-0 sm:w-auto sm:px-4"
+            onClick={() => { save(); nav(`/film/${id}/export`); }}
+          >
+            <Download className="h-4 w-4" />
             <span className="hidden sm:inline">{t('export')}</span>
           </Button>
         </div>
@@ -254,27 +276,28 @@ export default function Editor() {
 
         {/* inspector */}
         <aside className="flex max-h-[46vh] shrink-0 flex-col border-t border-line bg-card lg:max-h-none lg:w-[364px] lg:border-l lg:border-t-0">
-          <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-line p-2 lg:hidden">
+          <div ref={tabStrip} className="no-scrollbar fade-right flex gap-1.5 overflow-x-auto border-b border-line px-2 py-2 lg:hidden">
             {TOOLS.map((tool) => {
               const Icon = tool.icon;
               const active = section === tool.key;
               return (
                 <button
                   key={tool.key}
+                  data-tab={tool.key}
                   onClick={() => setSection(tool.key)}
-                  className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-[12px] font-semibold transition-colors ${
-                    active ? 'bg-ink text-paper' : 'text-ink-3'
+                  className={`flex h-10 shrink-0 items-center gap-1.5 rounded-full px-3 text-[12.5px] font-semibold transition-colors ${
+                    active ? 'bg-ink text-paper' : 'bg-paper text-ink-2'
                   }`}
                 >
-                  <Icon className="h-3.5 w-3.5" /> {t(tool.label)}
+                  <Icon className="h-4 w-4" strokeWidth={1.7} /> {t(tool.label)}
                 </button>
               );
             })}
             <button
               onClick={importPhotos}
-              className="flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-[12px] font-semibold text-ink-3"
+              className="flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-line px-3.5 pr-5 text-[12.5px] font-semibold text-ink-2"
             >
-              {importing ? <Spinner size={14} /> : <Images className="h-3.5 w-3.5" />} {t('addPhotosBulk')}
+              {importing ? <Spinner size={15} /> : <Images className="h-4 w-4" strokeWidth={1.7} />} {t('addPhotosBulk')}
             </button>
           </div>
 

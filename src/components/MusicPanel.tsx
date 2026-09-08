@@ -108,8 +108,8 @@ export default function MusicPanel() {
           />
           <TrackOption
             selected={!!path && path !== SAMPLE_TRACK_PATH}
-            title={path && path !== SAMPLE_TRACK_PATH ? project.musicName ?? t('musicUpload') : t('musicUpload')}
-            note={t('musicUpload')}
+            title={path && path !== SAMPLE_TRACK_PATH ? (project.musicName ?? t('musicUpload')) : t('musicUpload')}
+            note={t('musicOwnFile')}
             desc={t('musicUploadHint')}
             icon={<Upload className="h-4 w-4" strokeWidth={1.6} />}
             onClick={chooseFile}
