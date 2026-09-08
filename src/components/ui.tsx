@@ -18,7 +18,7 @@ export function Button({
   className = '',
   ...rest
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: 'sm' | 'md' }) {
-  const pad = size === 'sm' ? 'h-9 px-3.5 text-[13px]' : 'h-11 px-5 text-[14px]';
+  const pad = size === 'sm' ? 'h-10 px-3.5 text-[13px]' : 'h-11 px-5 text-[14px]';
   return (
     <button
       className={`inline-flex select-none items-center justify-center gap-2 rounded-lg font-semibold transition-colors duration-150 disabled:pointer-events-none disabled:opacity-40 ${pad} ${VARIANTS[variant]} ${className}`}
@@ -40,7 +40,7 @@ export function IconButton({
     <button
       title={label}
       aria-label={label}
-      className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg transition-colors duration-150 disabled:pointer-events-none disabled:opacity-30 ${
+      className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg transition-colors duration-150 disabled:pointer-events-none disabled:opacity-30 ${
         active ? 'bg-ink text-paper' : 'text-ink-2 hover:bg-ink/[0.06] hover:text-ink'
       } ${className}`}
       {...rest}

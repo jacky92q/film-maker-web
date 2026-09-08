@@ -3,6 +3,7 @@ export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      screens: { xs: '360px' },
       colors: {
         // Paper & ink — a printed-programme palette rather than a UI kit one.
         paper: '#F7F4EF',

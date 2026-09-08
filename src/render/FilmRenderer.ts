@@ -75,7 +75,9 @@ export class FilmRenderer {
   }
 
   // Paint the composited frame at absolute time `t` onto the internal canvas.
-  private compose(t: number) {
+  // `dip` draws the opening and closing fades to black; a poster frame wants
+  // them skipped, since a black rectangle is a poor advert for the film.
+  private compose(t: number, dip = true) {
     const idx = this.slideIndexAt(t);
     const slide = this.slides[idx];
     const localMs = (t - this.starts[idx]) * 1000;
@@ -91,22 +93,24 @@ export class FilmRenderer {
       drawSlide(this.mainCtx, slide, this.w, this.h, { localMs });
     }
 
+    if (!dip) return;
+
     // Open on black, close on black.
     const ms = t * 1000;
     const fadeIn = Math.min(1, ms / OPEN_FADE_MS);
     const fadeOut = Math.min(1, (this.total * 1000 - ms) / CLOSE_FADE_MS);
-    const dip = 1 - Math.min(fadeIn, Math.max(0, fadeOut));
-    if (dip > 0.001) {
+    const amount = 1 - Math.min(fadeIn, Math.max(0, fadeOut));
+    if (amount > 0.001) {
       this.mainCtx.save();
-      this.mainCtx.fillStyle = `rgba(0,0,0,${dip})`;
+      this.mainCtx.fillStyle = `rgba(0,0,0,${amount})`;
       this.mainCtx.fillRect(0, 0, this.w, this.h);
       this.mainCtx.restore();
     }
   }
 
   // Draw the frame at time `t`, scaled to fill the destination canvas.
-  renderTo(ctx: CanvasRenderingContext2D, t: number, outW: number, outH: number) {
-    this.compose(Math.max(0, Math.min(t, this.total)));
+  renderTo(ctx: CanvasRenderingContext2D, t: number, outW: number, outH: number, dip = true) {
+    this.compose(Math.max(0, Math.min(t, this.total)), dip);
     ctx.clearRect(0, 0, outW, outH);
     ctx.drawImage(this.main, 0, 0, outW, outH);
   }

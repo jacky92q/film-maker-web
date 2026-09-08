@@ -37,10 +37,27 @@ const AUDIO_SAMPLE_RATE = 48000;
 const AUDIO_BITRATE = 192_000;
 const AUDIO_FRAME = 1024;
 
+// Every frame sitting in the encoder's queue is a full uncompressed picture —
+// about 3 MB at 1080p, 12 MB at 4K. Handing the encoder frames faster than it
+// drains them is what makes a phone's tab run out of memory and die, so the
+// render loop waits for the queue to come down before drawing the next frame.
+const MAX_VIDEO_QUEUE = 3;
+const MAX_AUDIO_QUEUE = 16;
+
 const hasWebCodecs = () =>
   typeof window !== 'undefined' && 'VideoEncoder' in window && 'VideoFrame' in window;
 
 const yieldToUi = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+// Wait until the encoder has worked through its backlog. `encodeQueueSize`
+// only falls as frames are actually encoded, so this is real backpressure
+// rather than a single yield that lets the loop race ahead.
+async function awaitQueue(encoder: { encodeQueueSize: number }, max: number, signal?: { cancelled: boolean }) {
+  while (encoder.encodeQueueSize > max) {
+    if (signal?.cancelled) return;
+    await new Promise<void>((resolve) => setTimeout(resolve, 4));
+  }
+}
 
 /* ------------------------------------------------------------------ *
  * Codec probing
@@ -182,7 +199,7 @@ async function encodeAudio(bed: AudioBuffer, codec: string): Promise<EncodedAudi
     });
     encoder.encode(audioData);
     audioData.close();
-    if (encoder.encodeQueueSize > 24) await yieldToUi();
+    await awaitQueue(encoder, MAX_AUDIO_QUEUE);
   }
 
   await encoder.flush();
@@ -232,6 +249,13 @@ async function encodeFilm(
     }
     if (failure) throw failure;
 
+    // Draw only once there is room for the frame, so memory stays flat.
+    await awaitQueue(encoder, MAX_VIDEO_QUEUE, opts.signal);
+    if (opts.signal?.cancelled) {
+      encoder.close();
+      throw new ExportCancelled();
+    }
+
     const timestamp = Math.round(i * frameDurUs);
     renderer.renderTo(ctx, i / fps, width, height);
 
@@ -241,11 +265,11 @@ async function encodeFilm(
     frame.close();
     drainAudio(timestamp);
 
-    if (encoder.encodeQueueSize > 6 || i % 12 === 0) await yieldToUi();
+    if (i % 8 === 0) await yieldToUi();
     if (i % 4 === 0) opts.onProgress?.(0.15 + 0.8 * (i / totalFrames), 'rendering');
   }
 
-  opts.onProgress?.(0.96, 'finishing');
+  opts.onProgress?.(0.95, 'finishing');
   await encoder.flush();
   encoder.close();
   if (failure) throw failure;

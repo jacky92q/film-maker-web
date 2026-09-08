@@ -162,22 +162,22 @@ function FilmCard({
           </button>
           <p className="mt-1 truncate text-[12px] text-ink-3">{meta}</p>
         </div>
-        <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity duration-200 focus-within:opacity-100 group-hover:opacity-100">
+        <div className="flex shrink-0 items-center gap-0.5 opacity-60 transition-opacity duration-200 focus-within:opacity-100 group-hover:opacity-100 sm:opacity-0">
           <button
             onClick={onDuplicate}
             title={duplicateLabel}
             aria-label={duplicateLabel}
-            className="grid h-8 w-8 place-items-center rounded-md text-ink-3 transition-colors hover:bg-ink/[0.06] hover:text-ink"
+            className="grid h-10 w-10 place-items-center rounded-lg text-ink-3 transition-colors hover:bg-ink/[0.06] hover:text-ink"
           >
-            <Copy className="h-3.5 w-3.5" />
+            <Copy className="h-4 w-4" />
           </button>
           <button
             onClick={onDelete}
             title={deleteLabel}
             aria-label={deleteLabel}
-            className="grid h-8 w-8 place-items-center rounded-md text-ink-3 transition-colors hover:bg-clay/10 hover:text-clay"
+            className="grid h-10 w-10 place-items-center rounded-lg text-ink-3 transition-colors hover:bg-clay/10 hover:text-clay"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
       </div>

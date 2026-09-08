@@ -58,6 +58,10 @@ export default function Export() {
 
   const duration = useMemo(() => (project ? totalDuration(project) : 0), [project]);
   const frameAccurate = supportsFrameAccurateExport();
+  // A rough guard on the biggest setting: the file is assembled in memory, so
+  // a very large one is worth warning about before the render starts.
+  const estimatedMb = ((PRESETS.find((p) => p.key === preset)?.bitrate ?? 0) * duration) / 8 / 1_000_000;
+  const heavy = estimatedMb > 220;
 
   if (!project) return null;
 
@@ -163,34 +167,51 @@ export default function Export() {
             </div>
 
             <Label className="mt-8 block">{t('exportQuality')}</Label>
-            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
               {PRESETS.map((p) => {
                 const selected = preset === p.key;
+                const dims = ORIENTATION_DIMS[project.orientation];
+                const w = Math.round(dims.w * p.scale);
+                const h = Math.round(dims.h * p.scale);
+                const mb = (p.bitrate * duration) / 8 / 1_000_000;
                 return (
                   <button
                     key={p.key}
                     onClick={() => setPreset(p.key)}
-                    className={`rounded-xl border p-4 text-left transition-colors duration-150 ${
-                      selected ? 'border-ink bg-card' : 'border-line bg-card/60 hover:border-ink/25'
+                    aria-pressed={selected}
+                    className={`relative rounded-xl border-2 p-4 text-left transition-colors duration-150 ${
+                      selected ? 'border-ink bg-card' : 'border-line bg-card/50 hover:border-ink/25'
                     }`}
                   >
-                    <div className="flex items-baseline justify-between">
-                      <span className="font-display text-[19px] text-ink">{t(p.label)}</span>
-                      <span
-                        className={`h-2 w-2 rounded-full ${selected ? 'bg-gold' : 'bg-line'}`}
-                        aria-hidden
-                      />
-                    </div>
+                    <span
+                      className={`absolute right-3 top-3 grid h-5 w-5 place-items-center rounded-full border transition-colors ${
+                        selected ? 'border-ink bg-ink text-paper' : 'border-line'
+                      }`}
+                      aria-hidden
+                    >
+                      {selected && <Check className="h-3 w-3" strokeWidth={3} />}
+                    </span>
+                    <span className="block text-[19px] font-bold leading-none tracking-tight text-ink">{t(p.label)}</span>
                     {p.recommended && (
-                      <span className="mt-1.5 inline-block text-[10px] uppercase tracking-label text-gold-deep">
+                      <span className="mt-2 block text-[10px] uppercase tracking-label text-gold-deep">
                         {t('recommended')}
                       </span>
                     )}
                     <p className="mt-2 text-[12px] leading-snug text-ink-3">{t(p.desc)}</p>
+                    <p className="mt-2 text-[11.5px] font-medium tabular-nums text-ink-3/80">
+                      {w}×{h} · ~{mb < 10 ? mb.toFixed(1) : Math.round(mb)} MB
+                    </p>
                   </button>
                 );
               })}
             </div>
+
+            {heavy && (
+              <p className="mt-3 flex gap-2.5 rounded-lg border border-gold/30 bg-gold-wash/60 px-3.5 py-3 text-[12px] leading-relaxed text-gold-deep">
+                <AlertCircle className="mt-px h-4 w-4 shrink-0" />
+                {t('exportHeavyWarning')}
+              </p>
+            )}
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button className="flex-1" onClick={run}>
@@ -235,7 +256,7 @@ export default function Export() {
                 />
               </svg>
               <div className="absolute inset-0 grid place-items-center">
-                <span className="font-display text-[34px] tabular-nums text-ink">{Math.round(progress * 100)}</span>
+                <span className="text-[32px] font-bold tabular-nums tracking-tight text-ink">{Math.round(progress * 100)}<span className="text-[16px] text-ink-3">%</span></span>
               </div>
             </div>
             <p className="mt-7 font-display text-[19px] text-ink">{t(PHASE_KEY[phase])}</p>

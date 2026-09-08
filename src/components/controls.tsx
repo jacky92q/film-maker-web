@@ -44,7 +44,7 @@ export function Slider({
         onKeyUp={onCommit}
       />
       {label && (
-        <span className="w-12 shrink-0 text-right font-display text-[13px] tabular-nums text-ink-2">{label}</span>
+        <span className="w-12 shrink-0 text-right text-[12.5px] font-semibold tabular-nums text-ink-2">{label}</span>
       )}
     </div>
   );
@@ -67,7 +67,7 @@ export function ChipRow<T extends string>({
         <button
           key={o}
           onClick={() => onChange(o)}
-          className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors duration-150 ${
+          className={`h-9 shrink-0 whitespace-nowrap rounded-full border px-3.5 text-[12.5px] font-medium transition-colors duration-150 ${
             value === o
               ? 'border-ink bg-ink text-paper'
               : 'border-line bg-card text-ink-2 hover:border-ink/25 hover:text-ink'
@@ -95,7 +95,7 @@ export function Segmented<T extends string>({
         <button
           key={o.value}
           onClick={() => onChange(o.value)}
-          className={`flex-1 px-2 py-2 text-[12px] font-semibold transition-colors duration-150 ${
+          className={`h-10 flex-1 px-2 text-[12.5px] font-semibold transition-colors duration-150 ${
             i > 0 ? 'border-l border-line' : ''
           } ${value === o.value ? 'bg-ink text-paper' : 'bg-card text-ink-2 hover:bg-paper'}`}
         >
@@ -120,7 +120,7 @@ export function ColorRow({
   return (
     <div className="no-scrollbar fade-right -mx-1 flex items-center gap-2 overflow-x-auto px-1 pb-1">
       <label
-        className={`relative grid h-7 w-7 shrink-0 cursor-pointer place-items-center rounded-full ring-1 ring-inset ring-line ${
+        className={`relative grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-full ring-1 ring-inset ring-line ${
           custom ? 'outline outline-2 outline-offset-2 outline-ink' : ''
         }`}
         style={{ background: custom ?? 'conic-gradient(#e8b4b8,#c9a84c,#8faf8f,#88a8c0,#b090c8,#e8b4b8)' }}
@@ -140,7 +140,7 @@ export function ColorRow({
             key={c}
             onClick={() => onPreset(c)}
             title={c}
-            className={`h-7 w-7 shrink-0 rounded-full ring-1 ring-inset ring-black/10 transition-transform duration-150 ${
+            className={`h-8 w-8 shrink-0 rounded-full ring-1 ring-inset ring-black/10 transition-transform duration-150 ${
               selected ? 'outline outline-2 outline-offset-2 outline-ink' : 'hover:scale-105'
             }`}
             style={{ background: TEXT_COLOR_HEX[c] }}
@@ -176,7 +176,7 @@ export function ToolButton({
       title={title}
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-[12px] font-semibold transition-colors duration-150 disabled:pointer-events-none disabled:opacity-40 ${tone}`}
+      className={`inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border px-3.5 text-[12.5px] font-semibold transition-colors duration-150 disabled:pointer-events-none disabled:opacity-40 ${tone}`}
     >
       {children}
     </button>
