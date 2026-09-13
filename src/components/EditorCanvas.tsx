@@ -383,7 +383,7 @@ export default function EditorCanvas({
     <div ref={wrapRef} className="relative flex h-full w-full touch-none select-none items-center justify-center" style={{ touchAction: 'none' }}>
       <canvas
         ref={canvasRef}
-        className="max-h-full max-w-full rounded-[3px] shadow-frame ring-1 ring-white/10"
+        className="max-h-full max-w-full rounded-[4px] shadow-frame"
         style={{ aspectRatio: `${dims.w}/${dims.h}` }}
       />
 
@@ -415,12 +415,12 @@ export default function EditorCanvas({
             transform: `translate(-50%,-50%) rotate(${box!.rot}deg)`,
           }}
         >
-          <div className="absolute inset-0 rounded-[2px] outline outline-1 outline-offset-0 outline-gold" />
+          <div className="absolute inset-0 rounded-[2px] outline outline-1 outline-offset-0 outline-gold/90" />
           {CORNERS.map((c) => (
             <span
               key={c.id}
               data-handle={c.id}
-              className="pointer-events-auto absolute h-3.5 w-3.5 rounded-full border border-ink/25 bg-paper shadow"
+              className="pointer-events-auto absolute h-3.5 w-3.5 rounded-full bg-white shadow-[0_0_0_1.5px_rgba(0,0,0,0.55),0_2px_6px_rgba(0,0,0,0.5)]"
               style={{
                 left: c.sx < 0 ? -7 : undefined,
                 right: c.sx > 0 ? -7 : undefined,
@@ -432,7 +432,7 @@ export default function EditorCanvas({
           ))}
           <span
             data-handle="rotate"
-            className="pointer-events-auto absolute h-3.5 w-3.5 -translate-x-1/2 rounded-full border border-ink/25 bg-gold shadow"
+            className="pointer-events-auto absolute h-3.5 w-3.5 -translate-x-1/2 rounded-full bg-gold shadow-[0_0_0_1.5px_rgba(0,0,0,0.55),0_0_14px_rgba(232,192,138,0.8)]"
             style={{ left: '50%', top: -30, cursor: 'grab' }}
           />
           <span className="absolute left-1/2 h-[22px] w-px -translate-x-1/2 bg-gold/70" style={{ top: -22 }} />

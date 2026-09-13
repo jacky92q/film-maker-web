@@ -137,27 +137,27 @@ export default function Export() {
   }
 
   return (
-    <Page className="min-h-[100dvh] bg-paper">
-      <header className="border-b border-line bg-card">
-        <div className="mx-auto flex h-16 max-w-3xl items-center gap-3 px-6">
+    <Page className="room min-h-[100dvh] bg-screen">
+      <header className="border-b border-hair bg-surface">
+        <div className="mx-auto flex h-[72px] max-w-3xl items-center gap-3 px-6">
           <button
             onClick={() => nav(`/film/${id}`)}
-            className="grid h-9 w-9 place-items-center rounded-lg text-ink-2 transition-colors hover:bg-ink/[0.06]"
+            className="-ml-2 grid h-10 w-10 shrink-0 place-items-center rounded-full text-text-2 transition-colors hover:bg-white/[0.07] hover:text-text"
             aria-label={t('back')}
           >
             <ArrowLeft className="h-[18px] w-[18px]" />
           </button>
-          <div>
+          <div className="min-w-0">
             <p className="label">{t('exportTitle')}</p>
-            <h1 className="truncate font-display text-[17px] leading-tight text-ink">{project.title}</h1>
+            <h1 className="mt-1 truncate font-display text-[19px] leading-none text-text">{project.title}</h1>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-6 py-10">
+      <main className="mx-auto max-w-3xl px-6 py-12">
         {status === 'idle' && (
           <>
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-line pb-6">
+            <div className="flex flex-wrap items-center gap-x-7 gap-y-3 border-b border-hair pb-7">
               <Fact icon={<Layers className="h-3.5 w-3.5" />}>{f.slidesCount(lang, project.slides.length)}</Fact>
               <Fact icon={<Clock className="h-3.5 w-3.5" />}>{f.duration(lang, duration)}</Fact>
               <Fact icon={<Film className="h-3.5 w-3.5" />}>
@@ -166,8 +166,8 @@ export default function Export() {
               {project.musicName && <Fact icon={<Music2 className="h-3.5 w-3.5" />}>{project.musicName}</Fact>}
             </div>
 
-            <Label className="mt-8 block">{t('exportQuality')}</Label>
-            <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
+            <Label className="mt-10 block">{t('exportQuality')}</Label>
+            <div className="mt-4 space-y-2.5">
               {PRESETS.map((p) => {
                 const selected = preset === p.key;
                 const dims = ORIENTATION_DIMS[project.orientation];
@@ -179,41 +179,57 @@ export default function Export() {
                     key={p.key}
                     onClick={() => setPreset(p.key)}
                     aria-pressed={selected}
-                    className={`relative rounded-xl border-2 p-4 text-left transition-colors duration-150 ${
-                      selected ? 'border-ink bg-card' : 'border-line bg-card/50 hover:border-ink/25'
+                    className={`relative flex w-full items-center gap-4 overflow-hidden rounded-[12px] border p-5 text-left transition-all duration-250 ${
+                      selected
+                        ? 'border-gold/55 bg-gold/[0.07]'
+                        : 'border-hair bg-surface hover:border-hair-2'
                     }`}
                   >
+                    {/* A lit edge marks the choice without shouting. */}
                     <span
-                      className={`absolute right-3 top-3 grid h-5 w-5 place-items-center rounded-full border transition-colors ${
-                        selected ? 'border-ink bg-ink text-paper' : 'border-line'
+                      className={`absolute inset-y-0 left-0 w-[3px] transition-colors duration-250 ${
+                        selected ? 'bg-gold' : 'bg-transparent'
+                      }`}
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span
+                        className={`block text-[21px] font-bold leading-none tracking-tight ${
+                          selected ? 'text-gold' : 'text-text'
+                        }`}
+                      >
+                        {t(p.label)}
+                        {p.recommended && (
+                          <span className="ml-3 align-middle text-[10px] font-semibold uppercase tracking-label text-gold/70">
+                            {t('recommended')}
+                          </span>
+                        )}
+                      </span>
+                      <span className="mt-2 block text-[12.5px] text-text-2">{t(p.desc)}</span>
+                      <span className="mt-1.5 block text-[11.5px] font-medium tabular-nums text-text-3">
+                        {w}×{h} · ~{mb < 10 ? mb.toFixed(1) : Math.round(mb)} MB
+                      </span>
+                    </span>
+                    <span
+                      className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border transition-colors duration-250 ${
+                        selected ? 'border-gold bg-gold text-[#17120E]' : 'border-hair-2'
                       }`}
                       aria-hidden
                     >
-                      {selected && <Check className="h-3 w-3" strokeWidth={3} />}
+                      {selected && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
                     </span>
-                    <span className="block text-[19px] font-bold leading-none tracking-tight text-ink">{t(p.label)}</span>
-                    {p.recommended && (
-                      <span className="mt-2 block text-[10px] uppercase tracking-label text-gold-deep">
-                        {t('recommended')}
-                      </span>
-                    )}
-                    <p className="mt-2 text-[12px] leading-snug text-ink-3">{t(p.desc)}</p>
-                    <p className="mt-2 text-[11.5px] font-medium tabular-nums text-ink-3/80">
-                      {w}×{h} · ~{mb < 10 ? mb.toFixed(1) : Math.round(mb)} MB
-                    </p>
                   </button>
                 );
               })}
             </div>
 
             {heavy && (
-              <p className="mt-3 flex gap-2.5 rounded-lg border border-gold/30 bg-gold-wash/60 px-3.5 py-3 text-[12px] leading-relaxed text-gold-deep">
+              <p className="mt-4 flex gap-3 rounded-[10px] border border-gold/25 bg-gold/[0.06] px-4 py-3.5 text-[12px] leading-relaxed text-gold/90">
                 <AlertCircle className="mt-px h-4 w-4 shrink-0" />
                 {t('exportHeavyWarning')}
               </p>
             )}
 
-            <div className="mt-8 space-y-2.5">
+            <div className="mt-10 space-y-2.5">
               <Button size="lg" className="w-full" onClick={run}>
                 <Film className="h-[18px] w-[18px]" /> {t('exportStart')}
               </Button>
@@ -222,14 +238,14 @@ export default function Export() {
               </Button>
             </div>
 
-            <ul className="mt-7 space-y-2 border-t border-line pt-6 text-[12.5px] leading-relaxed text-ink-3">
-              <li className="flex gap-2.5">
-                <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-gold" />
+            <ul className="mt-10 space-y-3 border-t border-hair pt-8 text-[12.5px] leading-relaxed text-text-3">
+              <li className="flex gap-3">
+                <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-gold/70" />
                 {frameAccurate ? t('exportNoteFast') : t('exportNoteSlow')}
               </li>
               {project.musicPath && (
-                <li className="flex gap-2.5">
-                  <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-gold" />
+                <li className="flex gap-3">
+                  <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-gold/70" />
                   {t('exportNoteAudio')}
                 </li>
               )}
@@ -238,34 +254,42 @@ export default function Export() {
         )}
 
         {status === 'working' && (
-          <div className="flex flex-col items-center py-20">
-            <div className="relative h-36 w-36">
-              <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
-                <circle cx="50" cy="50" r="45" fill="none" stroke="#E3DCD0" strokeWidth="2" />
+          <div className="flex flex-col items-center py-24">
+            <div className="relative h-40 w-40">
+              {/* The ring glows as it fills — the room's one light source. */}
+              <span
+                className="absolute inset-4 rounded-full blur-2xl transition-opacity duration-500"
+                style={{ background: 'rgba(232,192,138,0.28)', opacity: 0.25 + progress * 0.6 }}
+              />
+              <svg viewBox="0 0 100 100" className="relative h-full w-full -rotate-90">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="#2B2523" strokeWidth="1.5" />
                 <circle
                   cx="50"
                   cy="50"
                   r="45"
                   fill="none"
-                  stroke="#A6813C"
-                  strokeWidth="2"
+                  stroke="#E8C08A"
+                  strokeWidth="1.5"
                   strokeLinecap="round"
                   strokeDasharray={2 * Math.PI * 45}
                   strokeDashoffset={2 * Math.PI * 45 * (1 - progress)}
-                  style={{ transition: 'stroke-dashoffset 0.2s linear' }}
+                  style={{ transition: 'stroke-dashoffset 0.25s linear' }}
                 />
               </svg>
               <div className="absolute inset-0 grid place-items-center">
-                <span className="text-[32px] font-bold tabular-nums tracking-tight text-ink">{Math.round(progress * 100)}<span className="text-[16px] text-ink-3">%</span></span>
+                <span className="text-[34px] font-bold tabular-nums tracking-tight text-text">
+                  {Math.round(progress * 100)}
+                  <span className="text-[16px] text-text-3">%</span>
+                </span>
               </div>
             </div>
-            <p className="mt-7 font-display text-[19px] text-ink">{t(PHASE_KEY[phase])}</p>
-            <p className="mt-1.5 text-[12.5px] text-ink-3">
+            <p className="mt-9 font-display text-[21px] text-text">{t(PHASE_KEY[phase])}</p>
+            <p className="mt-2.5 max-w-sm text-center text-[12.5px] leading-relaxed text-text-3">
               {frameAccurate ? t('exportNoteFast') : t('exportNoteSlow')}
             </p>
             <Button
               variant="quiet"
-              className="mt-8"
+              className="mt-9"
               onClick={() => {
                 cancel.current.cancelled = true;
               }}
@@ -276,12 +300,17 @@ export default function Export() {
         )}
 
         {status === 'done' && result && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center text-center">
-            <span className="grid h-11 w-11 place-items-center rounded-full border border-gold/40 text-gold">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            className="flex flex-col items-center text-center"
+          >
+            <span className="grid h-12 w-12 place-items-center rounded-full border border-gold/45 text-gold shadow-glow">
               <Check className="h-5 w-5" />
             </span>
-            <h2 className="mt-5 font-display text-[28px] text-ink">{t('exportDone')}</h2>
-            <p className="mt-2 text-[13px] text-ink-3">{t('exportDoneSub')}</p>
+            <h2 className="mt-6 font-display text-[32px] leading-tight text-text">{t('exportDone')}</h2>
+            <p className="mt-2.5 text-[13px] text-text-3">{t('exportDoneSub')}</p>
 
             {resultUrl && (
               <video
@@ -289,12 +318,12 @@ export default function Export() {
                 poster={result.poster}
                 controls
                 playsInline
-                className="mt-7 w-full max-w-xl rounded-[3px] border border-line bg-black shadow-card"
+                className="mt-8 w-full max-w-xl rounded-[6px] bg-black ring-1 ring-hair-2"
                 style={{ aspectRatio: project.orientation === 'portrait' ? '9/16' : '16/9' }}
               />
             )}
 
-            <div className="mt-7 flex w-full max-w-sm flex-col gap-2.5 sm:max-w-xl sm:flex-row">
+            <div className="mt-8 flex w-full max-w-sm flex-col gap-2.5 sm:max-w-xl sm:flex-row">
               <Button
                 size="lg"
                 className="flex-1"
@@ -307,8 +336,8 @@ export default function Export() {
               </Button>
             </div>
 
-            <div className="mt-5 space-y-1 text-[11.5px] text-ink-3">
-              <p>
+            <div className="mt-6 space-y-1.5 text-[11.5px] leading-relaxed text-text-3">
+              <p className="font-medium tabular-nums">
                 {result.ext.toUpperCase()} · {(result.blob.size / 1_048_576).toFixed(1)} MB
               </p>
               {result.ext === 'webm' && <p>{t('exportWebmNote')}</p>}
@@ -318,13 +347,13 @@ export default function Export() {
         )}
 
         {status === 'error' && (
-          <div className="flex flex-col items-center py-20 text-center">
-            <span className="grid h-11 w-11 place-items-center rounded-full border border-clay/40 text-clay">
+          <div className="flex flex-col items-center py-24 text-center">
+            <span className="grid h-12 w-12 place-items-center rounded-full border border-clay/45 text-clay">
               <AlertCircle className="h-5 w-5" />
             </span>
-            <h2 className="mt-5 font-display text-[22px] text-ink">{t('exportFailed')}</h2>
-            <p className="mt-2 max-w-sm text-[13px] leading-relaxed text-ink-3">{error}</p>
-            <Button className="mt-7" onClick={() => setStatus('idle')}>
+            <h2 className="mt-6 font-display text-[24px] text-text">{t('exportFailed')}</h2>
+            <p className="mt-3 max-w-sm text-[13px] leading-relaxed text-text-3">{error}</p>
+            <Button className="mt-8" onClick={() => setStatus('idle')}>
               {t('tryAgain')}
             </Button>
           </div>
@@ -336,8 +365,8 @@ export default function Export() {
 
 function Fact({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-2 text-[12.5px] text-ink-2">
-      <span className="text-ink-3">{icon}</span>
+    <span className="inline-flex items-center gap-2.5 text-[12.5px] text-text-2">
+      <span className="text-gold/70">{icon}</span>
       {children}
     </span>
   );

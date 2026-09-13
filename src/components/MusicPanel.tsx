@@ -95,7 +95,7 @@ export default function MusicPanel() {
 
   return (
     <div>
-      <p className="mb-5 text-[12.5px] leading-relaxed text-ink-3">{t('musicIntro')}</p>
+      <p className="mb-5 text-[12.5px] leading-relaxed text-text-3">{t('musicIntro')}</p>
 
       <Section title={t('musicTitle')}>
         <div className="space-y-2">
@@ -120,19 +120,19 @@ export default function MusicPanel() {
 
       {path && (
         <>
-          <div className="mb-6 rounded-xl border border-line bg-paper px-4 py-3.5">
+          <div className="mb-6 rounded-xl border border-hair bg-screen px-4 py-3.5">
             <div className="flex items-center gap-3">
               <button
                 onClick={audition}
                 disabled={busy}
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-paper transition-transform duration-150 hover:scale-[1.04] disabled:opacity-40"
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gold text-[#17120E] transition-transform duration-150 hover:scale-[1.04] disabled:opacity-40"
                 aria-label={auditioning ? t('musicStop') : t('musicPreview')}
               >
                 {busy ? <Spinner size={15} /> : auditioning ? <Pause className="h-4 w-4" /> : <Play className="ml-0.5 h-4 w-4" />}
               </button>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[13.5px] font-semibold text-ink">{project.musicName}</p>
-                <p className="mt-0.5 text-[11.5px] text-ink-3">
+                <p className="truncate text-[13.5px] font-semibold text-text">{project.musicName}</p>
+                <p className="mt-0.5 text-[11.5px] text-text-3">
                   {busy ? t('musicLoading') : `${t('musicLength')} ${mmss(trackSeconds)} · ${t('musicFilmLength')} ${mmss(filmSeconds)}`}
                 </p>
               </div>
@@ -140,14 +140,14 @@ export default function MusicPanel() {
                 onClick={() => setMusic(null, null)}
                 title={t('musicNone')}
                 aria-label={t('musicNone')}
-                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink-3 transition-colors hover:bg-clay/10 hover:text-clay"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-text-3 transition-colors hover:bg-clay/10 hover:text-clay"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
             </div>
 
             {repeats > 1 && (
-              <p className="mt-3 flex items-center gap-1.5 border-t border-line-soft pt-3 text-[11.5px] text-gold-deep">
+              <p className="mt-3 flex items-center gap-1.5 border-t border-hair pt-3 text-[11.5px] text-gold">
                 <Music2 className="h-3.5 w-3.5" />
                 {t('musicLoops')} · {f.loopCount(lang, repeats)}
               </p>
@@ -214,20 +214,20 @@ function TrackOption({
     <button
       onClick={onClick}
       className={`flex w-full items-start gap-3 rounded-xl border p-3.5 text-left transition-colors duration-150 ${
-        selected ? 'border-ink bg-paper' : 'border-line bg-card hover:border-ink/25'
+        selected ? 'border-gold bg-screen' : 'border-hair bg-surface hover:border-hair-2'
       }`}
     >
       <span
         className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg ${
-          selected ? 'bg-ink text-paper' : 'bg-paper-2 text-ink-3'
+          selected ? 'bg-gold text-[#17120E]' : 'bg-surface-2 text-text-3'
         }`}
       >
         {icon ?? <Music2 className="h-4 w-4" strokeWidth={1.6} />}
       </span>
       <span className="min-w-0 flex-1">
         <span className="label block">{note}</span>
-        <span className="mt-1 block truncate text-[13.5px] font-semibold text-ink">{title}</span>
-        <span className="mt-1 block text-[11.5px] leading-snug text-ink-3">{desc}</span>
+        <span className="mt-1 block truncate text-[13.5px] font-semibold text-text">{title}</span>
+        <span className="mt-1 block text-[11.5px] leading-snug text-text-3">{desc}</span>
       </span>
     </button>
   );

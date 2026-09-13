@@ -124,7 +124,7 @@ export default function SlideRail({
   return (
     // On a phone the actions sit under the rail: sharing the row left the
     // slides barely 180px to scroll in.
-    <div className="flex shrink-0 flex-col gap-1.5 border-t border-stage-line bg-stage px-2 py-2 sm:flex-row sm:items-center sm:gap-3 sm:px-3 sm:py-2.5">
+    <div className="flex shrink-0 flex-col gap-1.5 border-t border-hair bg-screen px-2 py-2 sm:flex-row sm:items-center sm:gap-3 sm:px-3 sm:py-2.5">
       <div
         ref={listRef}
         className="no-scrollbar flex min-w-0 flex-1 items-center gap-2 overflow-x-auto overscroll-x-contain"
@@ -174,7 +174,7 @@ export default function SlideRail({
         </button>
       </div>
 
-      <div className="flex shrink-0 items-center justify-end gap-0.5 sm:border-l sm:border-stage-line sm:pl-3">
+      <div className="flex shrink-0 items-center justify-end gap-0.5 sm:border-l sm:border-hair sm:pl-3">
         <span className="mr-auto pl-1 text-[10.5px] text-white/35 sm:hidden">
           {index + 1} / {project.slides.length} · {t('holdToReorder')}
         </span>
@@ -192,7 +192,7 @@ export default function SlideRail({
         >
           <ChevronRight className="h-[18px] w-[18px]" />
         </RailAction>
-        <span className="mx-0.5 h-5 w-px bg-stage-line" />
+        <span className="mx-0.5 h-5 w-px bg-screen-line" />
         <RailAction label={t('duplicateSlide')} onClick={() => duplicateSlide(project.slides[index].id)}>
           <Copy className="h-[17px] w-[17px]" />
         </RailAction>

@@ -22,6 +22,7 @@ const EN = {
   seconds: 'sec',
 
   // ---- library ----
+  libraryKicker: 'Your screening room',
   libraryTitle: 'Your films',
   libraryIntro: 'Everything is kept on this device. Nothing is uploaded.',
   newFilm: 'New film',
@@ -252,6 +253,7 @@ const KO: Record<StrKey, string> = {
   copyLabel: '사본',
   seconds: '초',
 
+  libraryKicker: '나의 상영관',
   libraryTitle: '내 영상',
   libraryIntro: '모든 작업은 이 기기에만 저장됩니다. 서버로 올라가지 않아요.',
   newFilm: '새 영상',
