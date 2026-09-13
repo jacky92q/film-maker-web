@@ -3,8 +3,8 @@ import { TEXT_COLORS, TEXT_COLOR_HEX, type SlideTextColor } from '../domain/enum
 
 export function Section({ title, children, right }: { title: string; children: ReactNode; right?: ReactNode }) {
   return (
-    <section className="mb-6">
-      <div className="mb-2.5 flex items-center justify-between gap-3">
+    <section className="mb-7">
+      <div className="mb-3 flex items-center justify-between gap-3">
         <h4 className="label">{title}</h4>
         {right}
       </div>
@@ -31,7 +31,7 @@ export function Slider({
   label?: string;
 }) {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3.5">
       <input
         type="range"
         className="flex-1"
@@ -44,7 +44,7 @@ export function Slider({
         onKeyUp={onCommit}
       />
       {label && (
-        <span className="w-12 shrink-0 text-right text-[12.5px] font-semibold tabular-nums text-ink-2">{label}</span>
+        <span className="w-12 shrink-0 text-right text-[12px] font-semibold tabular-nums text-gold">{label}</span>
       )}
     </div>
   );
@@ -67,10 +67,10 @@ export function ChipRow<T extends string>({
         <button
           key={o}
           onClick={() => onChange(o)}
-          className={`h-9 shrink-0 whitespace-nowrap rounded-full border px-3.5 text-[12.5px] font-medium transition-colors duration-150 ${
+          className={`h-9 shrink-0 whitespace-nowrap rounded-full border px-3.5 text-[12.5px] font-medium transition-all duration-200 ${
             value === o
-              ? 'border-ink bg-ink text-paper'
-              : 'border-line bg-card text-ink-2 hover:border-ink/25 hover:text-ink'
+              ? 'border-gold bg-gold text-[#17120E]'
+              : 'border-hair bg-surface-2 text-text-2 hover:border-hair-2 hover:text-text'
           }`}
         >
           {label(o)}
@@ -90,14 +90,14 @@ export function Segmented<T extends string>({
   onChange: (v: T) => void;
 }) {
   return (
-    <div className="flex overflow-hidden rounded-lg border border-line">
-      {options.map((o, i) => (
+    <div className="flex gap-1 rounded-full border border-hair bg-surface-2 p-1">
+      {options.map((o) => (
         <button
           key={o.value}
           onClick={() => onChange(o.value)}
-          className={`h-10 flex-1 px-2 text-[12.5px] font-semibold transition-colors duration-150 ${
-            i > 0 ? 'border-l border-line' : ''
-          } ${value === o.value ? 'bg-ink text-paper' : 'bg-card text-ink-2 hover:bg-paper'}`}
+          className={`h-9 flex-1 rounded-full px-2 text-[12.5px] font-semibold transition-all duration-200 ${
+            value === o.value ? 'bg-gold text-[#17120E]' : 'text-text-2 hover:text-text'
+          }`}
         >
           {o.label}
         </button>
@@ -118,12 +118,12 @@ export function ColorRow({
   onCustom: (hex: string) => void;
 }) {
   return (
-    <div className="no-scrollbar fade-right -mx-1 flex items-center gap-2 overflow-x-auto px-1 pb-1">
+    <div className="no-scrollbar fade-right -mx-1 flex items-center gap-2.5 overflow-x-auto px-1 py-1">
       <label
-        className={`relative grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-full ring-1 ring-inset ring-line ${
-          custom ? 'outline outline-2 outline-offset-2 outline-ink' : ''
+        className={`relative grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-full ring-1 ring-inset ring-hair-2 ${
+          custom ? 'outline outline-2 outline-offset-[3px] outline-gold' : ''
         }`}
-        style={{ background: custom ?? 'conic-gradient(#e8b4b8,#c9a84c,#8faf8f,#88a8c0,#b090c8,#e8b4b8)' }}
+        style={{ background: custom ?? 'conic-gradient(#e8b4b8,#e8c08a,#9faf9a,#88a8c0,#b090c8,#e8b4b8)' }}
         title="Custom colour"
       >
         <input
@@ -140,8 +140,8 @@ export function ColorRow({
             key={c}
             onClick={() => onPreset(c)}
             title={c}
-            className={`h-8 w-8 shrink-0 rounded-full ring-1 ring-inset ring-black/10 transition-transform duration-150 ${
-              selected ? 'outline outline-2 outline-offset-2 outline-ink' : 'hover:scale-105'
+            className={`h-8 w-8 shrink-0 rounded-full ring-1 ring-inset ring-white/15 transition-transform duration-200 ${
+              selected ? 'outline outline-2 outline-offset-[3px] outline-gold' : 'hover:scale-110'
             }`}
             style={{ background: TEXT_COLOR_HEX[c] }}
           />
@@ -167,16 +167,16 @@ export function ToolButton({
   disabled?: boolean;
 }) {
   const tone = danger
-    ? 'border-clay/35 text-clay hover:bg-clay/[0.07]'
+    ? 'border-clay/40 text-clay hover:bg-clay/10'
     : active
-      ? 'border-ink bg-ink text-paper'
-      : 'border-line bg-card text-ink-2 hover:border-ink/25 hover:text-ink';
+      ? 'border-gold bg-gold text-[#17120E]'
+      : 'border-hair bg-surface-2 text-text-2 hover:border-hair-2 hover:text-text';
   return (
     <button
       title={title}
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border px-3.5 text-[12.5px] font-semibold transition-colors duration-150 disabled:pointer-events-none disabled:opacity-40 ${tone}`}
+      className={`inline-flex h-10 items-center justify-center gap-1.5 rounded-full border px-4 text-[12.5px] font-semibold transition-all duration-200 disabled:pointer-events-none disabled:opacity-35 ${tone}`}
     >
       {children}
     </button>
@@ -185,10 +185,10 @@ export function ToolButton({
 
 export function PanelEmpty({ title, hint, action }: { title: string; hint: string; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center px-4 py-14 text-center">
-      <p className="font-display text-[17px] text-ink">{title}</p>
-      <p className="mt-2 max-w-[240px] text-[12.5px] leading-relaxed text-ink-3">{hint}</p>
-      {action && <div className="mt-5 flex flex-wrap justify-center gap-2">{action}</div>}
+    <div className="flex flex-col items-center px-4 py-16 text-center">
+      <p className="font-display text-[19px] text-text">{title}</p>
+      <p className="mt-2.5 max-w-[250px] text-[12.5px] leading-relaxed text-text-3">{hint}</p>
+      {action && <div className="mt-6 flex flex-wrap justify-center gap-2">{action}</div>}
     </div>
   );
 }

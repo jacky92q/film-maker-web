@@ -17,13 +17,13 @@ import type { PhotoLayer, Slide, StickerLayer, TextLayer } from '../domain/model
 
 function Tabs({ tabs, active, onChange }: { tabs: string[]; active: number; onChange: (i: number) => void }) {
   return (
-    <div className="mb-6 flex gap-5 border-b border-line">
+    <div className="mb-7 flex gap-6 border-b border-hair">
       {tabs.map((name, i) => (
         <button
           key={name}
           onClick={() => onChange(i)}
-          className={`-mb-px border-b-2 pb-2.5 text-[13px] font-semibold transition-colors duration-150 ${
-            active === i ? 'border-ink text-ink' : 'border-transparent text-ink-3 hover:text-ink-2'
+          className={`-mb-px border-b pb-3 text-[13px] font-semibold transition-colors duration-200 ${
+            active === i ? 'border-gold text-gold' : 'border-transparent text-text-3 hover:text-text'
           }`}
         >
           {name}
@@ -61,16 +61,16 @@ export function SlidePanel({ slide }: { slide: Slide }) {
                 </ToolButton>
               )}
             </div>
-            <label className="mt-2 flex h-10 cursor-pointer items-center gap-2.5 rounded-lg border border-line bg-card px-3 text-[12.5px] font-semibold text-ink-2 transition-colors hover:border-ink/25">
+            <label className="mt-2.5 flex h-11 cursor-pointer items-center gap-3 rounded-full border border-hair bg-surface-2 px-4 text-[12.5px] font-semibold text-text-2 transition-colors hover:border-hair-2 hover:text-text">
               <input
                 type="color"
                 value={slide.backgroundColor}
                 onChange={(e) => patch({ backgroundColor: e.target.value }, false)}
                 onBlur={() => patch({}, true)}
-                className="h-6 w-6 rounded-full ring-1 ring-inset ring-black/15"
+                className="h-6 w-6 rounded-full ring-1 ring-inset ring-white/20"
               />
               {t('secBackgroundColour')}
-              <span className="ml-auto text-[11.5px] uppercase tracking-wide tabular-nums text-ink-3">
+              <span className="ml-auto text-[11.5px] uppercase tracking-wide tabular-nums text-text-3">
                 {slide.backgroundColor}
               </span>
             </label>
@@ -85,7 +85,7 @@ export function SlidePanel({ slide }: { slide: Slide }) {
                 title={t('secPhotoZoom')}
                 right={
                   <button
-                    className="text-[11px] font-semibold text-gold-deep hover:underline"
+                    className="text-[11px] font-semibold text-gold transition-opacity hover:opacity-70"
                     onClick={() => patch({ photoScale: 1, photoOffsetX: 0, photoOffsetY: 0 })}
                   >
                     {t('reset')}
@@ -206,7 +206,7 @@ export function PhotoPanel({ layer }: { layer: PhotoLayer }) {
               title={t('zoom')}
               right={
                 <button
-                  className="text-[11px] font-semibold text-gold-deep hover:underline"
+                  className="text-[11px] font-semibold text-gold transition-opacity hover:opacity-70"
                   onClick={() => patch(layer.id, { cropScale: 1, cropOffsetX: 0, cropOffsetY: 0 })}
                 >
                   {t('reset')}
@@ -294,7 +294,7 @@ export function TextPanel({ layer }: { layer: TextLayer }) {
             onBlur={() => patch(layer.id, {}, true)}
             rows={3}
             placeholder={t('enterText')}
-            className="mb-6 w-full resize-none rounded-xl border border-line bg-card p-3.5 font-display text-[17px] leading-relaxed text-ink outline-none transition-colors placeholder:text-ink-3/50 focus:border-ink/40"
+            className="mb-7 w-full resize-none rounded-[12px] border border-hair bg-surface-2 p-4 font-display text-[18px] leading-relaxed text-text outline-none transition-colors placeholder:text-text-3/45 focus:border-gold/60"
           />
           <Section title={t('secType')}>
             <Segmented

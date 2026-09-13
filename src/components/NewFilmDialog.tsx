@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { MonitorPlay, Smartphone } from 'lucide-react';
 import { useT } from '../i18n';
 import { Button, Label, Modal } from './ui';
 import type { VideoOrientation } from '../domain/enums';
@@ -35,15 +34,14 @@ export default function NewFilmDialog({
         onChange={(e) => setTitle(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && submit()}
         placeholder={t('filmNameHint')}
-        className="mt-2 w-full border-b border-line bg-transparent pb-2 font-display text-[22px] text-ink outline-none transition-colors placeholder:text-ink-3/45 focus:border-gold"
+        className="mt-3 w-full border-b border-hair-2 bg-transparent pb-3 font-display text-[26px] text-text outline-none transition-colors placeholder:text-text-3/50 focus:border-gold"
       />
 
-      <Label className="mt-7 block">{t('formatLabel')}</Label>
-      <div className="mt-2 grid grid-cols-2 gap-3">
+      <Label className="mt-8 block">{t('formatLabel')}</Label>
+      <div className="mt-3 grid grid-cols-2 gap-3">
         <FormatCard
           active={orientation === 'landscape'}
           onClick={() => setOrientation('landscape')}
-          icon={<MonitorPlay className="h-5 w-5" strokeWidth={1.5} />}
           title={t('formatLandscape')}
           desc={t('formatLandscapeDesc')}
           ratio="16 / 9"
@@ -51,14 +49,13 @@ export default function NewFilmDialog({
         <FormatCard
           active={orientation === 'portrait'}
           onClick={() => setOrientation('portrait')}
-          icon={<Smartphone className="h-5 w-5" strokeWidth={1.5} />}
           title={t('formatPortrait')}
           desc={t('formatPortraitDesc')}
           ratio="9 / 16"
         />
       </div>
 
-      <div className="mt-7 flex justify-end gap-2">
+      <div className="mt-8 flex justify-end gap-2">
         <Button variant="quiet" onClick={onClose}>
           {t('cancel')}
         </Button>
@@ -71,14 +68,12 @@ export default function NewFilmDialog({
 function FormatCard({
   active,
   onClick,
-  icon,
   title,
   desc,
   ratio,
 }: {
   active: boolean;
   onClick: () => void;
-  icon: React.ReactNode;
   title: string;
   desc: string;
   ratio: string;
@@ -86,21 +81,22 @@ function FormatCard({
   return (
     <button
       onClick={onClick}
-      className={`rounded-xl border p-4 text-left transition-colors duration-150 ${
-        active ? 'border-ink bg-paper' : 'border-line bg-card hover:border-ink/25'
+      aria-pressed={active}
+      className={`rounded-[10px] border p-4 text-left transition-all duration-200 ${
+        active ? 'border-gold/60 bg-gold/[0.07]' : 'border-hair bg-surface-2 hover:border-hair-2'
       }`}
     >
-      <div className="flex items-center gap-2">
-        <span className={active ? 'text-ink' : 'text-ink-3'}>{icon}</span>
-        <span className={`text-[14px] font-semibold ${active ? 'text-ink' : 'text-ink-2'}`}>{title}</span>
-      </div>
-      <div className="mt-3 flex items-end gap-2">
+      {/* The shape of the screen, drawn to scale. */}
+      <span className="grid h-[52px] place-items-center">
         <span
-          className={`block w-full max-w-[64px] rounded border ${active ? 'border-ink/30 bg-ink/[0.06]' : 'border-line bg-paper-2'}`}
+          className={`block max-h-[52px] w-full max-w-[62px] rounded-[3px] border transition-colors ${
+            active ? 'border-gold/70 bg-gold/15' : 'border-hair-2 bg-black/40'
+          }`}
           style={{ aspectRatio: ratio }}
         />
-      </div>
-      <p className="mt-3 text-[11.5px] leading-snug text-ink-3">{desc}</p>
+      </span>
+      <span className={`mt-3.5 block text-[14px] font-semibold ${active ? 'text-gold' : 'text-text'}`}>{title}</span>
+      <span className="mt-1 block text-[11.5px] leading-snug text-text-3">{desc}</span>
     </button>
   );
 }

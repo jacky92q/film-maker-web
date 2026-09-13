@@ -26,8 +26,10 @@ export default function StickerPicker({
           <button
             key={c}
             onClick={() => setCategory(c)}
-            className={`rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors duration-150 ${
-              category === c ? 'border-ink bg-ink text-paper' : 'border-line bg-card text-ink-2 hover:border-ink/25'
+            className={`h-9 rounded-full border px-3.5 text-[12.5px] font-medium transition-all duration-200 ${
+              category === c
+                ? 'border-gold bg-gold text-[#17120E]'
+                : 'border-hair bg-surface-2 text-text-2 hover:border-hair-2 hover:text-text'
             }`}
           >
             {el('stickerCat', c)}
@@ -42,7 +44,7 @@ export default function StickerPicker({
               onPick(s.kind);
               onClose();
             }}
-            className="grid aspect-square place-items-center rounded-lg border border-transparent bg-paper p-2 transition-colors duration-150 hover:border-line hover:bg-gold-wash"
+            className="grid aspect-square place-items-center rounded-[10px] border border-transparent bg-surface-2 p-2 transition-all duration-200 hover:-translate-y-0.5 hover:border-gold/40 hover:bg-gold/[0.07]"
           >
             <img src={stickerUrl(s.kind)} alt={s.kind} loading="lazy" className="max-h-full max-w-full object-contain" />
           </button>

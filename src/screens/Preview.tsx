@@ -169,7 +169,7 @@ export default function Preview() {
                 onClick={ready ? toggle : undefined}
                 disabled={!ready}
                 aria-label={ended ? t('replay') : t('play')}
-                className="grid h-[74px] w-[74px] place-items-center rounded-full bg-white/95 text-ink shadow-frame transition-transform duration-200 hover:scale-105 active:scale-95"
+                className="grid h-[74px] w-[74px] place-items-center rounded-full bg-white/95 text-text shadow-frame transition-transform duration-200 hover:scale-105 active:scale-95"
               >
                 {ready ? <RotateCcw className="h-7 w-7" strokeWidth={1.6} /> : <Spinner size={22} />}
               </button>
@@ -204,7 +204,7 @@ export default function Preview() {
               </div>
               <button
                 onClick={() => nav(`/film/${id}/export`)}
-                className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-white px-4 text-[13px] font-semibold text-ink transition-transform hover:scale-[1.03] active:scale-95"
+                className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-white px-4 text-[13px] font-semibold text-text transition-transform hover:scale-[1.03] active:scale-95"
               >
                 <Download className="h-4 w-4" />
                 <span className="hidden sm:inline">{t('export')}</span>
@@ -273,7 +273,7 @@ export default function Preview() {
                   onClick={toggle}
                   disabled={!ready}
                   aria-label={playing ? t('pause') : t('play')}
-                  className="grid h-14 w-14 place-items-center rounded-full bg-white text-ink transition-transform duration-150 hover:scale-105 active:scale-95 disabled:opacity-40"
+                  className="grid h-14 w-14 place-items-center rounded-full bg-white text-text transition-transform duration-150 hover:scale-105 active:scale-95 disabled:opacity-40"
                 >
                   {ended ? (
                     <RotateCcw className="h-6 w-6" />

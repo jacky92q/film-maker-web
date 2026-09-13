@@ -133,7 +133,7 @@ export default function Editor() {
 
   if (!project) {
     return (
-      <div className="grid h-[100dvh] place-items-center bg-paper text-ink-3">
+      <div className="grid h-[100dvh] place-items-center bg-screen text-text-3">
         <Spinner size={22} />
       </div>
     );
@@ -166,26 +166,26 @@ export default function Editor() {
   const canAdd = section === 'photo' || section === 'text' || section === 'sticker';
 
   return (
-    <div className="flex h-[100dvh] flex-col overflow-hidden bg-paper text-ink">
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-screen text-text">
       {/* ---- top bar ---- */}
-      <header className="flex h-14 shrink-0 items-center gap-2 border-b border-line bg-card px-3">
+      <header className="flex h-[60px] shrink-0 items-center gap-2 border-b border-hair bg-surface px-3">
         <IconButton label={t('back')} onClick={() => { save(); nav('/'); }}>
           <ArrowLeft className="h-[18px] w-[18px]" />
         </IconButton>
 
         <button
           onClick={() => setRenaming(true)}
-          className="min-w-0 max-w-[30vw] truncate text-left font-display text-[17px] leading-none text-ink hover:text-gold-deep sm:max-w-[42vw]"
+          className="min-w-0 max-w-[30vw] truncate text-left font-display text-[18px] leading-none text-text transition-colors hover:text-gold sm:max-w-[42vw]"
           title={t('renameFilm')}
           aria-label={t('renameFilm')}
         >
           {project.title || t('untitled')}
         </button>
-        <span className="hidden shrink-0 items-center gap-1.5 text-[11px] text-ink-3 sm:flex">
-          <span className="h-3 w-px bg-line" />
+        <span className="hidden shrink-0 items-center gap-1.5 text-[11px] text-text-3 sm:flex">
+          <span className="h-3 w-px bg-hair" />
           {f.slidesCount(lang, project.slides.length)} · {f.duration(lang, duration)}
         </span>
-        <span className="ml-1 flex shrink-0 items-center gap-1 text-[11px] text-ink-3">
+        <span className="ml-1 flex shrink-0 items-center gap-1 text-[11px] text-text-3">
           {dirty ? <Spinner size={11} /> : <Check className="h-3.5 w-3.5 text-gold" />}
           <span className="hidden sm:inline">{dirty ? t('saving') : t('saved')}</span>
         </span>
@@ -193,7 +193,7 @@ export default function Editor() {
         <div className="ml-auto flex items-center gap-1">
           <IconButton label={t('undo')} onClick={undo} className="hidden xs:grid"><Undo2 className="h-[18px] w-[18px]" /></IconButton>
           <IconButton label={t('redo')} onClick={redo} className="hidden xs:grid"><Redo2 className="h-[18px] w-[18px]" /></IconButton>
-          <span className="mx-1 hidden h-5 w-px bg-line xs:block" />
+          <span className="mx-1 hidden h-5 w-px bg-hair xs:block" />
           <Button
             variant="outline"
             size="sm"
@@ -221,7 +221,7 @@ export default function Editor() {
       {/* ---- body ---- */}
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         {/* tool rail */}
-        <nav className="hidden w-[76px] shrink-0 flex-col items-center gap-0.5 border-r border-line bg-card py-3 lg:flex">
+        <nav className="hidden w-[84px] shrink-0 flex-col items-center gap-1 border-r border-hair bg-surface py-4 lg:flex">
           {TOOLS.map((tool) => {
             const Icon = tool.icon;
             const active = section === tool.key;
@@ -229,20 +229,27 @@ export default function Editor() {
               <button
                 key={tool.key}
                 onClick={() => setSection(tool.key)}
-                className={`flex w-[60px] flex-col items-center gap-1.5 rounded-lg py-2.5 transition-colors duration-150 ${
-                  active ? 'bg-ink text-paper' : 'text-ink-3 hover:bg-ink/[0.05] hover:text-ink'
+                className={`relative flex w-[64px] flex-col items-center gap-1.5 rounded-[10px] py-3 transition-colors duration-200 ${
+                  active ? 'text-gold' : 'text-text-3 hover:bg-white/[0.05] hover:text-text'
                 }`}
               >
-                <Icon className="h-[18px] w-[18px]" strokeWidth={1.6} />
-                <span className="text-[10px] font-semibold tracking-wide">{t(tool.label)}</span>
+                {active && (
+                  <motion.span
+                    layoutId="tool-lit"
+                    transition={{ type: 'spring', damping: 30, stiffness: 420 }}
+                    className="absolute inset-0 rounded-[10px] bg-gold/[0.09] ring-1 ring-inset ring-gold/25"
+                  />
+                )}
+                <Icon className="relative h-[19px] w-[19px]" strokeWidth={1.6} />
+                <span className="relative text-[10px] font-semibold tracking-wide">{t(tool.label)}</span>
               </button>
             );
           })}
-          <span className="my-2 h-px w-8 bg-line" />
+          <span className="my-3 h-px w-8 bg-hair" />
           <button
             onClick={importPhotos}
             title={t('addPhotosBulkHint')}
-            className="flex w-[60px] flex-col items-center gap-1.5 rounded-lg py-2.5 text-ink-3 transition-colors hover:bg-ink/[0.05] hover:text-ink"
+            className="flex w-[64px] flex-col items-center gap-1.5 rounded-[10px] py-3 text-text-3 transition-colors hover:bg-white/[0.05] hover:text-text"
           >
             {importing ? <Spinner size={18} /> : <Images className="h-[18px] w-[18px]" strokeWidth={1.6} />}
             <span className="text-[10px] font-semibold tracking-wide">{t('addPhotosBulk')}</span>
@@ -275,8 +282,8 @@ export default function Editor() {
         </div>
 
         {/* inspector */}
-        <aside className="flex max-h-[46vh] shrink-0 flex-col border-t border-line bg-card lg:max-h-none lg:w-[364px] lg:border-l lg:border-t-0">
-          <div ref={tabStrip} className="no-scrollbar fade-right flex gap-1.5 overflow-x-auto border-b border-line px-2 py-2 lg:hidden">
+        <aside className="flex max-h-[46vh] shrink-0 flex-col border-t border-hair bg-surface lg:max-h-none lg:w-[372px] lg:border-l lg:border-t-0">
+          <div ref={tabStrip} className="no-scrollbar fade-right flex gap-1.5 overflow-x-auto border-b border-hair px-2 py-2 lg:hidden">
             {TOOLS.map((tool) => {
               const Icon = tool.icon;
               const active = section === tool.key;
@@ -286,7 +293,7 @@ export default function Editor() {
                   data-tab={tool.key}
                   onClick={() => setSection(tool.key)}
                   className={`flex h-10 shrink-0 items-center gap-1.5 rounded-full px-3 text-[12.5px] font-semibold transition-colors ${
-                    active ? 'bg-ink text-paper' : 'bg-paper text-ink-2'
+                    active ? 'bg-gold text-[#17120E]' : 'bg-screen text-text-2'
                   }`}
                 >
                   <Icon className="h-4 w-4" strokeWidth={1.7} /> {t(tool.label)}
@@ -295,14 +302,14 @@ export default function Editor() {
             })}
             <button
               onClick={importPhotos}
-              className="flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-line px-3.5 pr-5 text-[12.5px] font-semibold text-ink-2"
+              className="flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-hair px-3.5 pr-5 text-[12.5px] font-semibold text-text-2"
             >
               {importing ? <Spinner size={15} /> : <Images className="h-4 w-4" strokeWidth={1.7} />} {t('addPhotosBulk')}
             </button>
           </div>
 
-          <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3.5">
-            <h3 className="font-display text-[16px] text-ink">{panelTitle}</h3>
+          <div className="flex items-center justify-between gap-3 border-b border-hair px-5 py-4">
+            <h3 className="font-display text-[18px] leading-none text-text">{panelTitle}</h3>
             {canAdd && (
               <Button size="sm" variant="outline" onClick={addFromPanel}>
                 <Plus className="h-3.5 w-3.5" />
@@ -311,7 +318,7 @@ export default function Editor() {
             )}
           </div>
 
-          <div className="thin-scroll min-h-0 flex-1 overflow-y-auto px-5 py-5">
+          <div className="thin-scroll min-h-0 flex-1 overflow-y-auto px-5 py-6">
             {section === 'slide' && <SlidePanel slide={slide} />}
             {section === 'photo' &&
               (selection.kind === 'photo' && slide.photoLayers.some((l) => l.id === selection.id) ? (
@@ -330,15 +337,15 @@ export default function Editor() {
                 <StickerPanel layer={slide.stickerLayers.find((l) => l.id === selection.id)!} />
               ) : (
                 <div className="flex flex-col items-center px-4 py-14 text-center">
-                  <p className="font-display text-[17px] text-ink">{t('pickSticker')}</p>
-                  <p className="mt-2 max-w-[240px] text-[12.5px] leading-relaxed text-ink-3">{t('stickerHint')}</p>
+                  <p className="font-display text-[17px] text-text">{t('pickSticker')}</p>
+                  <p className="mt-2 max-w-[240px] text-[12.5px] leading-relaxed text-text-3">{t('stickerHint')}</p>
                   <Button size="sm" variant="outline" className="mt-5" onClick={() => setStickerOpen(true)}>
                     <Plus className="h-3.5 w-3.5" /> {t('pickSticker')}
                   </Button>
                 </div>
               ))}
             {section === 'music' && <MusicPanel />}
-            <p className="mt-8 border-t border-line-soft pt-4 text-[11px] text-ink-3/80">{t('keyboardHint')}</p>
+            <p className="mt-10 border-t border-hair pt-5 text-[11px] text-text-3/70">{t('keyboardHint')}</p>
           </div>
         </aside>
       </div>
@@ -357,7 +364,7 @@ export default function Editor() {
             }
           }}
           onBlur={(e) => setTitle(e.target.value.trim() || t('untitled'))}
-          className="w-full border-b border-line bg-transparent pb-2 font-display text-[22px] text-ink outline-none focus:border-gold"
+          className="w-full border-b border-hair-2 bg-transparent pb-3 font-display text-[26px] text-text outline-none transition-colors focus:border-gold"
         />
         <div className="mt-6 flex justify-end">
           <Button onClick={() => { save(); setRenaming(false); }}>{t('done')}</Button>
@@ -373,10 +380,10 @@ export default function Editor() {
                 addSlide(tpl, t);
                 setTemplateOpen(false);
               }}
-              className="flex w-full items-baseline gap-3 rounded-xl border border-line bg-card p-3.5 text-left transition-colors hover:border-ink/25 hover:bg-paper"
+              className="flex w-full items-baseline gap-3 rounded-[10px] border border-hair bg-surface-2 p-4 text-left transition-colors hover:border-gold/50 hover:bg-gold/[0.05]"
             >
-              <span className="font-display text-[16px] text-ink">{el('template', tpl)}</span>
-              <span className="text-[11.5px] text-ink-3">{t(TEMPLATE_DESC[tpl])}</span>
+              <span className="font-display text-[17px] text-text">{el('template', tpl)}</span>
+              <span className="text-[11.5px] text-text-3">{t(TEMPLATE_DESC[tpl])}</span>
             </button>
           ))}
         </div>
@@ -388,7 +395,7 @@ export default function Editor() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
-            className="pointer-events-none fixed left-1/2 top-[72px] z-50 -translate-x-1/2 rounded-full bg-ink px-4 py-2 text-[12.5px] font-medium text-paper shadow-lift"
+            className="pointer-events-none fixed left-1/2 top-[76px] z-50 -translate-x-1/2 rounded-full bg-gold px-4 py-2 text-[12.5px] font-semibold text-[#17120E] shadow-glow"
           >
             {toast}
           </motion.div>
